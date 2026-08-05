@@ -1,0 +1,25 @@
+[project]
+name = "clinical-triage-mlops"
+version = "0.1.0"
+description = "Triagem automática de laudos médicos por urgência — FIAP MLE Tech Challenge Fase 3"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "scikit-learn",
+    "pandas",
+    "prometheus-client",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+]
+
+[tool.ruff]
+line-length = 100
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
