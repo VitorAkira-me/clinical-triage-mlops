@@ -1,3 +1,13 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+license = { file = "LICENSE" }
+readme = "README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License"
+]
 [project]
 name = "clinical-triage-mlops"
 version = "0.1.0"
@@ -13,13 +23,110 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
-    "ruff",
+    "pre-commit>=4.6.0",
+    "ruff>=0.11.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+    "ipykernel>=7.2.0",
 ]
 
-[tool.ruff]
-line-length = 100
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+
+#################################################################################
+# RUFF                                                                          #
+#################################################################################
+
+[tool.ruff]
+line-length = 99
+target-version = "py313"
+src = ["src", "tests"]
+exclude = [
+    ".git",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+    "docs/",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "F",  # Pyflakes
+    "I",  # isort (import sorting)
+    "N",  # pep8-naming
+    "T20",  # flake8-print (proíbe print(), usar logging)
+    "W",  # pycodestyle warnings
+]
+extend-ignore = [
+    "E203",  # whitespace antes de ':' (conflita com ruff format)
+    "E501",  # line too long (delegado ao ruff format)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F401"]
+"notebooks/*" = ["T20"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+force-sort-within-sections = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+#################################################################################
+# PYTEST                                                                        #
+#################################################################################
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short --strict-markers"
+minversion = "7.0"
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "unit: testes unitários (padrão)",
+    "integration: testes de integração entre componentes",
+    "model: testes de modelo/treino de ML",
+    "api: testes de endpoint FastAPI",
+    "slow: testes mais lentos (execute com -m 'not slow')",
+]
+
+[tool.coverage.run]
+source = ["src"]
+branch = true
+omit = ["tests/*", "**/__init__.py", "*/tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
+fail_under = 70
+show_missing = true
+
+#################################################################################
+# UV                                                                            #
+#################################################################################
+
+[tool.uv]
+environments = [
+    "sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pre-commit>=4.6.0",
+]
