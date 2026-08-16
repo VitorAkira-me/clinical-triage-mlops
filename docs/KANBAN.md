@@ -22,10 +22,6 @@ Status.
 - **Resultado**: fedmml-ed-triage escolhido — ver
   [ADR-001](decisions/ADR-001-dataset.md)
 
----
-
-## TODO
-
 ### ML-002 — EDA do dataset escolhido
 - **Objetivo**: entender completude, distribuição de classes (após
   remapeamento ESI→3 classes) e qualidade textual do campo `clinical_notes`
@@ -43,11 +39,45 @@ Status.
   class_weight/etc.) tomada e justificada
 - **Dependências**: ML-001
 - **Complexidade**: média
-- **Status**: TODO — próxima tarefa recomendada
+- **Resultado**: notebook `notebooks/01_eda_dataset.ipynb`. Distribuição de
+  classes moderadamente desbalanceada (atenção 47,4% / normal 32,2% /
+  urgente 20,3%) — decisão: `class_weight="balanced"`, sem
+  under/oversampling, avaliação por F1 macro + recall de `urgente`.
+  Achado principal: `clinical_notes` tem vazamento determinístico total
+  (chief_complaint e cláusula final do template mapeiam 1:1 para a classe,
+  0 exceções em 85.679 notas) — qualquer classificador de texto vai bater
+  ~100%. Vitais/labs, fora de escopo, validados como gerados com ruído
+  real (não determinísticos), confirmando que o vazamento é específico do
+  texto. Decisão de manter o dataset e reportar com transparência
+  documentada em [ADR-002](decisions/ADR-002-text-leakage.md).
+
+---
+
+## TODO
 
 ### ML-003 — Baseline de classificação (TF-IDF + Logistic Regression)
+- **Objetivo**: treinar e avaliar um baseline de classificação de urgência
+  a partir de `clinical_notes`, estabelecendo o piso de referência para
+  qualquer modelo futuro
+- **Motivação**: validar o pipeline de treino ponta a ponta antes de
+  investir em otimização; expor com transparência a limitação registrada
+  no ADR-002
+- **Vou aprender**: vetorização TF-IDF, avaliação multi-classe (F1 macro,
+  matriz de confusão), como reportar um resultado "bom demais" com
+  honestidade
+- **Pré-requisitos**: ML-002 concluído
+- **Passos**: carregar `data/processed/fedmml_ed_triage_eda.parquet` →
+  dropar nulos → split treino/teste estratificado → TF-IDF + LogisticRegression
+  (`class_weight="balanced"`) → avaliar (F1 macro, recall por classe,
+  matriz de confusão) → treinar e avaliar o baseline ingênuo por
+  `chief_complaint` (ADR-002) para comparação lado a lado → salvar modelo
+  em `models/`
+- **Critério de aceite**: métricas do baseline TF-IDF e do baseline
+  ingênuo reportadas lado a lado (esperado: equivalentes, conforme
+  ADR-002); modelo serializado e reprodutível
 - **Dependências**: ML-002
-- **Status**: TODO (detalhamento completo quando ML-002 fechar)
+- **Complexidade**: média
+- **Status**: TODO
 
 ### API-001 — Especificar e implementar endpoint `/predict`
 - **Dependências**: ML-003

@@ -59,12 +59,18 @@ apontar a inconsistência e pedir decisão.
 ## 7. Current State
 
 ```
-Current Phase: Discovery
-Current Step: STEP 0
-Current Task: ML-002 (EDA do dataset)
-Last Completed: ML-001 — dataset escolhido (fedmml-ed-triage, ADR-001)
-Next Recommended Action: EDA — completude de clinical_notes, distribuição
-das 3 classes após remapeamento ESI→normal/atenção/urgente
+Current Phase: Discovery → STEP 1
+Current Step: STEP 1 (baseline de modelo)
+Current Task: ML-003 (baseline TF-IDF + Logistic Regression)
+Last Completed: ML-002 — EDA (notebooks/01_eda_dataset.ipynb). Achado
+principal: clinical_notes tem vazamento determinístico total via template
+(chief_complaint/cláusula final → classe, 100%, 0 exceções); decisão de
+manter o dataset e reportar com transparência em ADR-002. Distribuição de
+classes moderadamente desbalanceada (atenção 47%/normal 32%/urgente 20%)
+→ class_weight="balanced".
+Next Recommended Action: ML-003 — baseline TF-IDF+LogReg com
+class_weight="balanced", comparado lado a lado com baseline ingênuo por
+chief_complaint (ver ADR-002)
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como
