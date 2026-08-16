@@ -19,15 +19,9 @@ dependencies = [
     "scikit-learn",
     "pandas",
     "prometheus-client",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pre-commit>=4.6.0",
-    "ruff>=0.11.0",
-    "pytest>=8.0.0",
-    "pytest-cov>=6.0.0",
-    "ipykernel>=7.2.0",
+    "python-dotenv>=1.2.3",
+    "huggingface-hub>=1.27.0",
+    "pyarrow>=25.0.1",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -128,5 +122,11 @@ environments = [
 [dependency-groups]
 dev = [
     "httpx>=0.28.1",
+    "ipykernel>=7.2.0",
+    "matplotlib>=3.11.1",
+    "nbconvert>=7.16.0",
     "pre-commit>=4.6.0",
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.11.0",
 ]
