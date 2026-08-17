@@ -1,0 +1,82 @@
+{
+  "task": "ML-003",
+  "split": {
+    "test_size": 0.2,
+    "stratify": "urgencia",
+    "random_state": 42
+  },
+  "models": {
+    "tfidf_logreg": {
+      "model": "TF-IDF + LogisticRegression",
+      "n_test": 17136,
+      "f1_macro": 1.0,
+      "recall_macro": 1.0,
+      "recall_per_class": {
+        "normal": 1.0,
+        "atencao": 1.0,
+        "urgente": 1.0
+      },
+      "recall_urgente": 1.0,
+      "confusion_matrix": {
+        "labels": [
+          "normal",
+          "atencao",
+          "urgente"
+        ],
+        "matrix": [
+          [
+            5522,
+            0,
+            0
+          ],
+          [
+            0,
+            8128,
+            0
+          ],
+          [
+            0,
+            0,
+            3486
+          ]
+        ]
+      }
+    },
+    "naive_chief_complaint": {
+      "model": "Ing\u00eanuo (chief_complaint)",
+      "n_test": 17136,
+      "f1_macro": 1.0,
+      "recall_macro": 1.0,
+      "recall_per_class": {
+        "normal": 1.0,
+        "atencao": 1.0,
+        "urgente": 1.0
+      },
+      "recall_urgente": 1.0,
+      "confusion_matrix": {
+        "labels": [
+          "normal",
+          "atencao",
+          "urgente"
+        ],
+        "matrix": [
+          [
+            5522,
+            0,
+            0
+          ],
+          [
+            0,
+            8128,
+            0
+          ],
+          [
+            0,
+            0,
+            3486
+          ]
+        ]
+      }
+    }
+  }
+}
