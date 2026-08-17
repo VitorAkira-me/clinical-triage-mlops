@@ -51,10 +51,6 @@ Status.
   texto. Decisão de manter o dataset e reportar com transparência
   documentada em [ADR-002](decisions/ADR-002-text-leakage.md).
 
----
-
-## TODO
-
 ### ML-003 — Baseline de classificação (TF-IDF + Logistic Regression)
 - **Objetivo**: treinar e avaliar um baseline de classificação de urgência
   a partir de `clinical_notes`, estabelecendo o piso de referência para
@@ -66,18 +62,32 @@ Status.
   matriz de confusão), como reportar um resultado "bom demais" com
   honestidade
 - **Pré-requisitos**: ML-002 concluído
-- **Passos**: carregar `data/processed/fedmml_ed_triage_eda.parquet` →
-  dropar nulos → split treino/teste estratificado → TF-IDF + LogisticRegression
-  (`class_weight="balanced"`) → avaliar (F1 macro, recall por classe,
-  matriz de confusão) → treinar e avaliar o baseline ingênuo por
-  `chief_complaint` (ADR-002) para comparação lado a lado → salvar modelo
-  em `models/`
+- **Passos**: carregar `data/raw/fedmml_ed_triage_raw.parquet` (precisa de
+  `chief_complaint` além de `clinical_notes`, além do parquet processado
+  da ML-002) → dropar nulos → split treino/teste estratificado
+  (compartilhado pelos dois baselines) → TF-IDF + LogisticRegression
+  (`class_weight="balanced"`) → baseline ingênuo por `chief_complaint`
+  (ADR-002) → avaliar os dois (F1 macro, recall por classe, matriz de
+  confusão) → salvar modelos em `models/` e métricas em
+  `docs/experiments/`
 - **Critério de aceite**: métricas do baseline TF-IDF e do baseline
   ingênuo reportadas lado a lado (esperado: equivalentes, conforme
   ADR-002); modelo serializado e reprodutível
 - **Dependências**: ML-002
 - **Complexidade**: média
-- **Status**: TODO
+- **Resultado**: notebook `notebooks/02_baseline.ipynb`, métricas em
+  [docs/experiments/ML-003-baseline-metrics.json](../docs/experiments/ML-003-baseline-metrics.json).
+  Confirmação empírica do ADR-002: os dois baselines (TF-IDF+LogReg e
+  ingênuo por `chief_complaint`) batem exatamente F1 macro = recall macro
+  = recall(`urgente`) = 1.00 sobre 17.136 exemplos de teste — matrizes de
+  confusão idênticas, diagonais perfeitas. Não há distinção prática entre
+  os dois modelos: o texto não carrega sinal além do que `chief_complaint`
+  já entrega. README (tarefa separada) vai documentar isso na subseção
+  6.1 "Limitações do dataset".
+
+---
+
+## TODO
 
 ### API-001 — Especificar e implementar endpoint `/predict`
 - **Dependências**: ML-003
