@@ -59,19 +59,20 @@ apontar a inconsistência e pedir decisão.
 ## 7. Current State
 
 ```
-Current Phase: STEP 1 → STEP 2
-Current Step: STEP 2 (API)
-Current Task: API-001 (especificar e implementar endpoint /predict)
-Last Completed: ML-003 — baseline TF-IDF+LogReg vs. baseline ingênuo por
-chief_complaint (notebooks/02_baseline.ipynb). Confirmação empírica do
-ADR-002: os dois baselines empatam em F1 macro = recall macro =
-recall(urgente) = 1.00 (17.136 exemplos de teste) — texto não carrega
-sinal além de chief_complaint. Métricas em
-docs/experiments/ML-003-baseline-metrics.json.
-Next Recommended Action: API-001 — especificar o endpoint /predict antes
-de implementar (docs/specs/); README ainda precisa da subseção 6.1
-"Limitações do dataset" (tarefa de documentação separada, números já
-prontos na ML-003)
+Current Phase: STEP 2 → STEP 3
+Current Step: STEP 3 (Docker)
+Current Task: nenhuma tarefa aberta — próxima a definir
+Last Completed: API-001 — POST /predict + GET /health (src/api/main.py,
+src/api/schemas.py), servindo models/tfidf_logreg_baseline.joblib
+(ML-003). Spec em docs/specs/API-001-predict-endpoint.md. Probabilidades
+retornadas como dict nomeado por classe (não lista posicional — evita o
+gotcha de predict_proba/pipeline.classes_ ordenar alfabeticamente).
+Startup falha com erro acionável se o modelo não existir. 6 testes
+(tests/test_api.py) passando, incluindo 1 @pytest.mark.slow com o modelo
+real; testado também manualmente via uvicorn.
+Next Recommended Action: duas pendências abertas, sem ordem obrigatória —
+(1) README subseção 6.1 "Limitações do dataset" (números prontos desde a
+ML-003, ainda não escrita); (2) STEP 3 do roadmap — Docker (EPIC 05)
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como

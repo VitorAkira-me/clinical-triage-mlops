@@ -6,10 +6,16 @@ description: Consulta e atualiza o Kanban do projeto (docs/KANBAN.md) — pegar 
 # Kanban do projeto (docs/KANBAN.md)
 
 O Kanban de desenvolvimento vive em [`docs/KANBAN.md`](../../../docs/KANBAN.md), versionado no
-próprio repositório (é o source of truth definido no CLAUDE.md, seção 6 — não há board externo
-para este projeto). Colunas: BACKLOG · TODO · IN PROGRESS · REVIEW/VALIDATION · DONE. IDs seguem
-o padrão `<PREFIXO>-<NNN>` (ex: `ML-002`, `API-001`) ou `EPIC-NN` para itens de backlog ainda não
-detalhados.
+próprio repositório (é o source of truth definido no CLAUDE.md, seção 6). Colunas: BACKLOG · TODO
+· IN PROGRESS · REVIEW/VALIDATION · DONE. IDs seguem o padrão `<PREFIXO>-<NNN>` (ex: `ML-002`,
+`API-001`) ou `EPIC-NN` para itens de backlog ainda não detalhados.
+
+Existe também um board no Notion, mantido sincronizado manualmente a partir daqui — o usuário
+atualiza o Notion olhando para `docs/KANBAN.md`, não o contrário. Por isso o campo **Resultado**
+de cada card fechado precisa estar sempre completo e preciso ao mover para DONE (não deixar para
+depois, não resumir demais): é a partir dele que o Notion é corrigido. Um card marcado como DONE
+sem trabalho de fato completo (ou sem Resultado preenchido) propaga o erro para o Notion na
+próxima sincronização.
 
 Projeto solo (ver CLAUDE.md seção 1) — não há campo de atribuição de pessoa nem necessidade de
 perguntar quem vai trabalhar em um card.
