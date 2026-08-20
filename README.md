@@ -43,8 +43,42 @@ clínico oficial.
 
 ## 6. Modelo
 
-TODO — baseline a definir no STEP 1 (candidatos: TF-IDF + Logistic
-Regression, TF-IDF + Random Forest).
+Baseline: TF-IDF + Logistic Regression (`class_weight="balanced"`), treinado sobre o campo
+`clinical_notes`. Split treino/teste estratificado (80/20, `random_state=42`). Ver
+[notebooks/02_baseline.ipynb](notebooks/02_baseline.ipynb) e métricas completas em
+[docs/experiments/ML-003-baseline-metrics.json](docs/experiments/ML-003-baseline-metrics.json).
+
+### 6.1 Limitações do dataset — Vazamento de rótulo identificado
+
+Durante a EDA (ML-002) e confirmado empiricamente na ML-003, identificamos que o campo
+`clinical_notes` do `fedmml-ed-triage` é gerado por um template fixo: as 28 categorias de
+`chief_complaint` e as 5 variantes de cláusula final do texto mapeiam para a classe de urgência
+(normal/atenção/urgente) com 100% de precisão, sem exceção, nas 85.679 notas verificadas.
+
+Para confirmar isso, comparamos o baseline de texto (TF-IDF + Logistic Regression) lado a lado com
+um baseline ingênuo que classifica apenas pelo `chief_complaint` (dicionário complaint → classe
+majoritária):
+
+| Modelo | F1 macro | Recall macro | Recall (`urgente`) |
+|---|---|---|---|
+| TF-IDF + Logistic Regression | 1.00 | 1.00 | 1.00 |
+| Ingênuo (só `chief_complaint`) | 1.00 | 1.00 | 1.00 |
+
+*(17.136 exemplos de teste; matrizes de confusão idênticas, diagonais perfeitas — ver
+[métricas completas](docs/experiments/ML-003-baseline-metrics.json))*
+
+Os dois empatam exatamente. Isso significa que o classificador de texto não demonstra capacidade
+real de NLP clínico — ele decorou uma tabela de busca embutida no template do gerador sintético,
+não aprendeu linguagem clínica. Validamos que esse vazamento é específico do texto: os campos de
+vitais/labs (fora do escopo do classificador), como `spo2`, `heart_rate` e troponina, seguem
+distribuições com sobreposição real entre classes, sem determinismo perfeito.
+
+Decidimos manter o dataset e reportar esse resultado com transparência, em vez de trocar de fonte
+ou escondê-lo — decisão completa e alternativas descartadas em
+[ADR-002](docs/decisions/ADR-002-text-leakage.md). Na prática, isso significa que as métricas de
+~100% deste projeto não devem ser lidas como "o modelo é excelente", e sim como evidência de um
+artefato de geração de dados sintéticos — uma lição de MLOps sobre validar dados antes de
+comemorar métricas.
 
 ## 7. Como executar
 
