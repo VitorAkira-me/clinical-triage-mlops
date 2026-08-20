@@ -62,17 +62,16 @@ apontar a inconsistência e pedir decisão.
 Current Phase: STEP 2 → STEP 3
 Current Step: STEP 3 (Docker)
 Current Task: nenhuma tarefa aberta — próxima a definir
-Last Completed: API-001 — POST /predict + GET /health (src/api/main.py,
-src/api/schemas.py), servindo models/tfidf_logreg_baseline.joblib
-(ML-003). Spec em docs/specs/API-001-predict-endpoint.md. Probabilidades
-retornadas como dict nomeado por classe (não lista posicional — evita o
-gotcha de predict_proba/pipeline.classes_ ordenar alfabeticamente).
-Startup falha com erro acionável se o modelo não existir. 6 testes
-(tests/test_api.py) passando, incluindo 1 @pytest.mark.slow com o modelo
-real; testado também manualmente via uvicorn.
-Next Recommended Action: duas pendências abertas, sem ordem obrigatória —
-(1) README subseção 6.1 "Limitações do dataset" (números prontos desde a
-ML-003, ainda não escrita); (2) STEP 3 do roadmap — Docker (EPIC 05)
+Last Completed: DOC-001 — README seções 6 (Modelo) e 6.1 (Limitações do
+dataset) preenchidas, números conferidos contra
+docs/experiments/ML-003-baseline-metrics.json. Fecha a pendência de
+documentação aberta desde a ML-003. API-001 (POST /predict + GET
+/health, src/api/main.py) já mergeado antes desta sessão.
+Next Recommended Action: STEP 3 do roadmap — Docker (EPIC 05). Nenhuma
+pendência de documentação em aberto; demais seções TODO do README
+(Docker/CI/Airflow/monitoramento/benchmark) são decisões de arquitetura,
+não redação — seguem SPEC → discussão antes de implementar, como
+combinado na API-001.
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como

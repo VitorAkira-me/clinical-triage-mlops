@@ -102,6 +102,21 @@ Status.
   passando; testado manualmente também via `uvicorn` real (não só `TestClient`). Fora de escopo:
   auth, CORS, versionamento de rota, métricas Prometheus (EPIC 09).
 
+### DOC-001 — README seção 6 (Modelo) + 6.1 (Limitações do dataset)
+- **Objetivo**: documentar o baseline da ML-003 no README, incluindo a tabela comparativa
+  TF-IDF vs. baseline ingênuo que evidencia o vazamento do ADR-002
+- **Motivação**: números prontos desde a ML-003, pendência de redação registrada em duas
+  sessões anteriores (ML-003 e API-001)
+- **Dependências**: ML-003
+- **Complexidade**: baixa (só redação — nenhuma decisão de código pendente)
+- **Resultado**: README.md seções 6 e 6.1 preenchidas. Números conferidos contra
+  [docs/experiments/ML-003-baseline-metrics.json](../docs/experiments/ML-003-baseline-metrics.json)
+  (batem exatos). Tabela comparativa TF-IDF vs. ingênuo por `chief_complaint`, com nota sobre
+  vitais/labs validados como não-determinísticos (ML-002) e link para
+  [ADR-002](decisions/ADR-002-text-leakage.md). Docker/CI/demais seções TODO do README
+  continuam fora de escopo — são decisões de arquitetura, não redação, e seguem o fluxo
+  SPEC → discussão.
+
 ---
 
 ## TODO
