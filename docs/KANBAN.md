@@ -85,13 +85,26 @@ Status.
   já entrega. README (tarefa separada) vai documentar isso na subseção
   6.1 "Limitações do dataset".
 
+### API-001 — Especificar e implementar endpoint `/predict`
+- **Objetivo**: expor o pipeline TF-IDF + LogisticRegression da ML-003 via API FastAPI
+  (`POST /predict` + `GET /health`)
+- **Dependências**: ML-003
+- **Complexidade**: média
+- **Resultado**: spec em
+  [docs/specs/API-001-predict-endpoint.md](../docs/specs/API-001-predict-endpoint.md);
+  implementação em `src/api/main.py` + `src/api/schemas.py`. `POST /predict` recebe só
+  `clinical_notes`, devolve `urgencia` + `probabilidades` (dict nomeado por classe, montado via
+  `pipeline.classes_` — não uma lista posicional, evita o gotcha de `predict_proba` ordenar
+  alfabeticamente). Modelo carregado uma vez no startup (`lifespan`); ausência de
+  `models/tfidf_logreg_baseline.joblib` falha o startup com mensagem citando
+  `notebooks/02_baseline.ipynb`. `MODEL_PATH` configurável por variável de ambiente. 6 testes em
+  `tests/test_api.py` (fixture sintética + 1 `@pytest.mark.slow` com o modelo real), todos
+  passando; testado manualmente também via `uvicorn` real (não só `TestClient`). Fora de escopo:
+  auth, CORS, versionamento de rota, métricas Prometheus (EPIC 09).
+
 ---
 
 ## TODO
-
-### API-001 — Especificar e implementar endpoint `/predict`
-- **Dependências**: ML-003
-- **Status**: TODO
 
 *(Demais tarefas dos EPICS 05–14 serão detalhadas ao chegar em cada STEP
 do roadmap — ver decisão de não planejar em excesso antecipadamente,
