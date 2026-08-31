@@ -82,7 +82,51 @@ comemorar métricas.
 
 ## 7. Como executar
 
-TODO — instruções chegam junto com o STEP 2/3 (API + Docker).
+### Pré-requisito: o artefato do modelo
+
+A API serve o modelo treinado na ML-003 (`models/tfidf_logreg_baseline.joblib`).
+Esse arquivo **não é versionado no Git** (ver `.gitignore`) — gere-o rodando
+[`notebooks/02_baseline.ipynb`](notebooks/02_baseline.ipynb) antes de subir a
+API ou construir a imagem. Sem ele, a API falha no startup com mensagem
+acionável e o `docker build` falha no passo de `COPY` do modelo.
+
+### Com Docker (imagem de inferência — DOCK-001)
+
+```bash
+docker build -t clinical-triage-api .
+docker run --rm -p 8000:8000 clinical-triage-api
+```
+
+A imagem é autossuficiente: o modelo é embutido no build, não precisa de volume,
+rede ou variável de ambiente. `docker ps` mostra o container como `healthy`
+alguns segundos após subir (`HEALTHCHECK` batendo em `/health`).
+
+Especificação e decisões de arquitetura da imagem em
+[docs/specs/DOCK-001-dockerize-api.md](docs/specs/DOCK-001-dockerize-api.md).
+
+### Sem Docker (desenvolvimento local)
+
+```bash
+uv sync                 # só as dependências de runtime da API
+uv run uvicorn src.api.main:app --host 0.0.0.0 --port 8000
+
+uv sync --extra data    # adiciona pandas/pyarrow/huggingface-hub p/ os notebooks
+```
+
+### Chamando a API
+
+```bash
+curl http://localhost:8000/health
+# {"status":"ok"}
+
+curl -X POST http://localhost:8000/predict \
+  -H 'content-type: application/json' \
+  -d '{"clinical_notes": "67yo M c/o chest pain, diaphoretic, in moderate distress"}'
+# {"urgencia":"urgente","probabilidades":{"atencao":...,"normal":...,"urgente":...}}
+```
+
+Contrato completo dos endpoints em
+[docs/specs/API-001-predict-endpoint.md](docs/specs/API-001-predict-endpoint.md).
 
 ## 8. API
 

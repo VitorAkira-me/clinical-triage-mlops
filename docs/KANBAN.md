@@ -117,6 +117,31 @@ Status.
   continuam fora de escopo — são decisões de arquitetura, não redação, e seguem o fluxo
   SPEC → discussão.
 
+### DOCK-001 — Dockerizar a API de inferência (`src/api/`)
+- **Objetivo**: empacotar a API FastAPI da API-001 numa imagem Docker autossuficiente que sobe
+  com `docker run` e responde em `/health` e `/predict`, sem volume, rede ou secret
+- **Motivação**: pré-requisito para CI/CD (EPIC 07) e arquitetura de cloud (EPIC 12) — a partir
+  daqui a unidade deployável do projeto é a imagem, não o checkout do repo
+- **Dependências**: API-001
+- **Complexidade**: média
+- **Resultado**: spec em
+  [docs/specs/DOCK-001-dockerize-api.md](specs/DOCK-001-dockerize-api.md). `Dockerfile`
+  single-stage (`python:3.12-slim-bookworm`), `uv sync --frozen --no-dev --no-install-project`
+  a partir do `uv.lock`; código roda via `PYTHONPATH=/app` (não instala o pacote `src`), usuário
+  não-root, `HEALTHCHECK` batendo em `GET /health` via `urllib` (sem curl na slim). Modelo entra
+  por `COPY` explícito do `.joblib` no build (decisão: imagem autossuficiente; revisitar quando
+  houver model registry — EPIC 08/12). Commit `chore:` separado moveu `pandas`/`pyarrow`/
+  `huggingface-hub` para `[project.optional-dependencies] data` — fora do runtime da imagem,
+  ainda instaláveis via `uv sync --extra data` para os notebooks. **Tamanho da imagem final:
+  132 MB** (`docker image inspect` / `CONTENT SIZE`, compactado; ~568 MB descompactado). Chegou
+  a 308 MB na 1ª versão e caiu com: remover `chown -R` (layer duplicada de ~296 MB), montar o
+  binário do `uv` via `RUN --mount=from=` em vez de `COPY --from` (~58 MB), e mandar o cache de
+  download do `uv` para `--mount=type=cache` em vez da layer. Validado de verdade: `docker build`
+  limpo, container sobe `healthy` em ~7 s, `GET /health` → `200`, `POST /predict` → `200` com 3
+  probabilidades somando 1.0, texto em branco → `422`; build sem o `.joblib` no contexto falha
+  no `COPY` (exit 1), não em runtime. `docker-compose.yml` fora de escopo (só faz sentido no
+  EPIC 09, com Prometheus + Grafana).
+
 ---
 
 ## TODO
@@ -127,9 +152,15 @@ registrada na sessão de discovery.)*
 
 ---
 
+## IN PROGRESS
+
+*(nenhuma tarefa aberta)*
+
+---
+
 ## BACKLOG (nível de épico, não detalhado ainda)
 
-- EPIC 05 — Docker
+- EPIC 05 — Docker (DOCK-001 concluído; compose fica para o EPIC 09)
 - EPIC 06 — Testes
 - EPIC 07 — CI/CD (GitHub Actions)
 - EPIC 08 — Airflow (DAG de treino)
