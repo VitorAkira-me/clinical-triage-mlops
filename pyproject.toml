@@ -17,11 +17,18 @@ dependencies = [
     "fastapi",
     "uvicorn",
     "scikit-learn",
-    "pandas",
     "prometheus-client",
     "python-dotenv>=1.2.3",
-    "huggingface-hub>=1.27.0",
+]
+
+# Dependências de notebook/EDA/treino — NÃO usadas pela API de inferência (src/api/).
+# Ficam fora do runtime da imagem Docker (DOCK-001). Para rodar os notebooks:
+#   uv sync --extra data
+[project.optional-dependencies]
+data = [
+    "pandas",
     "pyarrow>=25.0.1",
+    "huggingface-hub>=1.27.0",
 ]
 
 [tool.hatch.build.targets.wheel]
