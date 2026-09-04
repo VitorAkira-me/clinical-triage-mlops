@@ -1,0 +1,115 @@
+name: CI
+
+# CI-001 — lint -> testes -> build. Cobre só a metade CI do pipeline CI/CD do
+# Tech Challenge; CD (publicar imagem, deploy) depende de registry/cloud (EPIC 12).
+# Spec: docs/specs/CI-001-ci-pipeline.md
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  UV_VERSION: "0.11.7"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - run: uv sync --frozen
+
+      - name: ruff check
+        run: uv run ruff check .
+
+      - name: ruff format --check
+        run: uv run ruff format --check .
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - run: uv sync --frozen
+
+      # -m "not slow" exclui o teste de integração com o modelo real (API-001) — ele já se
+      # auto-skipa em CI (o .joblib real é gitignored), mas o filtro deixa a intenção explícita.
+      - name: pytest (com cobertura)
+        run: uv run pytest -m "not slow" --cov --cov-fail-under=70
+
+  build:
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # O .joblib real (ML-003) é gitignored e não existe no runner. Gera um placeholder
+      # sintético só para o COPY do Dockerfile ter o que copiar — não valida acurácia,
+      # só que a imagem builda e serve /health e /predict de ponta a ponta.
+      - name: Gera modelo placeholder (DOCK-001 RF4)
+        run: |
+          uv sync --frozen --no-dev
+          uv run python scripts/gen_placeholder_model.py
+
+      - name: docker build
+        run: docker build -t clinical-triage-api:ci .
+
+      - name: Smoke test da imagem (health + predict reais)
+        run: |
+          docker run -d --name ci-smoke -p 8000:8000 clinical-triage-api:ci
+
+          for i in $(seq 1 30); do
+            status="$(docker inspect -f '{{.State.Health.Status}}' ci-smoke)"
+            echo "health=$status ($i/30)"
+            [ "$status" = "healthy" ] && break
+            sleep 1
+          done
+
+          if [ "$status" != "healthy" ]; then
+            echo "Container não ficou healthy a tempo:"
+            docker logs ci-smoke
+            exit 1
+          fi
+
+          curl -fsS http://localhost:8000/health
+          echo
+          curl -fsS -X POST http://localhost:8000/predict \
+            -H 'content-type: application/json' \
+            -d '{"clinical_notes": "67yo M c/o chest pain, moderate distress"}'
+          echo
+
+      - name: Cleanup
+        if: always()
+        run: docker rm -f ci-smoke || true

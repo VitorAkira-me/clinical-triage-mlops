@@ -154,7 +154,29 @@ registrada na sessão de discovery.)*
 
 ## IN PROGRESS
 
-*(nenhuma tarefa aberta)*
+### CI-001 — Pipeline CI (GitHub Actions): lint → testes → build
+- **Objetivo**: automatizar lint (ruff), testes (pytest) e validação de build da imagem Docker
+  a cada PR/push para `main`, com o pipeline realmente bloqueando merge quando falha
+- **Motivação**: nada garante hoje que um PR não quebrou lint/teste/build antes de chegar em
+  `main` — depende de alguém lembrar de rodar localmente; requisito do Tech Challenge Fase 3
+  (pipeline CI/CD)
+- **Vou aprender**: GitHub Actions (triggers, jobs, DAG via `needs`, cache), diferença entre
+  "CI reporta vermelho" e "CI bloqueia merge" (branch protection + required status checks),
+  como validar `docker build` em CI sem artefato de modelo versionado
+- **Pré-requisitos**: DOCK-001 concluído e mergeado em `main` (o job de build depende do
+  `Dockerfile` existir)
+- **Passos**: spec em `docs/specs/CI-001-ci-pipeline.md` → `scripts/gen_placeholder_model.py`
+  (modelo sintético só para o smoke test do build, não o baseline real) → workflow
+  `.github/workflows/ci.yml` (jobs `lint`/`test` em paralelo, `build` com `needs: [lint, test]`,
+  cache de deps via `astral-sh/setup-uv`) → demo real de falha proposital (commit que quebra
+  lint) e recuperação (commit que conserta) dentro do próprio PR → branch protection marcando
+  os 3 jobs como required status checks
+- **Critério de aceite**: PR do CI-001 mostra o pipeline rodando de verdade — um run vermelho
+  (lint quebrado de propósito) e um run verde (corrigido) —, com saída real de `gh run watch`
+  colada no card; branch protection em `main` exige os 3 checks para permitir merge
+- **Dependências**: DOCK-001
+- **Complexidade**: média
+- **Status**: IN PROGRESS
 
 ---
 
@@ -162,7 +184,8 @@ registrada na sessão de discovery.)*
 
 - EPIC 05 — Docker (DOCK-001 concluído; compose fica para o EPIC 09)
 - EPIC 06 — Testes
-- EPIC 07 — CI/CD (GitHub Actions)
+- EPIC 07 — CI/CD (GitHub Actions) (CI-001 destacado para IN PROGRESS — cobre só o CI; o CD
+  segue dependendo de registry/cloud, EPIC 12)
 - EPIC 08 — Airflow (DAG de treino)
 - EPIC 09 — Observabilidade (Prometheus + Grafana)
 - EPIC 10 — Otimização de inferência (ONNX/quantização/pruning)
