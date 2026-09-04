@@ -2,6 +2,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 import os
 from pathlib import Path
+import sys
 from typing import Any
 
 from fastapi import FastAPI, Request
