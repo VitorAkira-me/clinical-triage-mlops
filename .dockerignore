@@ -1,10 +1,47 @@
+# O objetivo aqui é duplo: encolher o contexto enviado ao daemon (build mais
+# rápido) e garantir que nada de secret/lixo entre numa layer por engano.
+# O Dockerfile faz COPY seletivo (src/, o .joblib), mas isto é defesa em
+# profundidade.
+
+# Controle de versão / ambientes locais
 .git
 .venv
+venv
+
+# Caches e artefatos de Python
 __pycache__
 *.pyc
+*.py[cod]
+*.egg-info
+dist
+build
+.pytest_cache
+.ruff_cache
+.coverage
+htmlcov
+
+# Secrets — .env tem HF_TOKEN, nunca vai para a imagem
+.env
+.env.*
+
+# Dados: a API de inferência não lê dado nenhum
+data/
+
+# Outros componentes do projeto, fora do runtime da API
 notebooks/
 tests/
 docs/
-data/raw
-.pytest_cache
-.ruff_cache
+airflow/
+benchmarks/
+monitoring/
+.github/
+
+# Config de ferramentas / editor
+.pre-commit-config.yaml
+.vscode/
+.idea/
+.DS_Store
+
+# Meta do próprio Docker
+Dockerfile
+.dockerignore
