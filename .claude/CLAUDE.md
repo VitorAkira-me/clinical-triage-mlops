@@ -59,19 +59,23 @@ apontar a inconsistência e pedir decisão.
 ## 7. Current State
 
 ```
-Current Phase: STEP 2 → STEP 3
-Current Step: STEP 3 (Docker)
+Current Phase: STEP 3 → STEP 4
+Current Step: STEP 4 (CI/CD) concluído na metade CI; CD segue no EPIC 12
 Current Task: nenhuma tarefa aberta — próxima a definir
-Last Completed: DOC-001 — README seções 6 (Modelo) e 6.1 (Limitações do
-dataset) preenchidas, números conferidos contra
-docs/experiments/ML-003-baseline-metrics.json. Fecha a pendência de
-documentação aberta desde a ML-003. API-001 (POST /predict + GET
-/health, src/api/main.py) já mergeado antes desta sessão.
-Next Recommended Action: STEP 3 do roadmap — Docker (EPIC 05). Nenhuma
-pendência de documentação em aberto; demais seções TODO do README
-(Docker/CI/Airflow/monitoramento/benchmark) são decisões de arquitetura,
-não redação — seguem SPEC → discussão antes de implementar, como
-combinado na API-001.
+Last Completed: CI-001 — pipeline `.github/workflows/ci.yml` (lint → testes
+→ build) via GitHub Actions, branch protection em `main` com os 3 jobs
+como required status checks. Validado com run vermelho e verde reais
+(PR #6): commit proposital quebrando lint → job `lint` falha, `build`
+skipado (`needs: [lint, test]`); com branch protection ativa,
+`mergeStateStatus` vira `BLOCKED` e `gh pr merge` é recusado pelo
+GitHub — não é só sinal, bloqueia de fato. DOCK-001 (Dockerfile
+single-stage, imagem final 132 MB) mergeado em `main` nesta mesma
+sessão, antes do CI-001 (o job de build depende do Dockerfile existir).
+Next Recommended Action: próximo STEP do roadmap a definir — candidatos
+naturais são EPIC 06 (testes, se quiser aprofundar cobertura além dos
+testes da API-001) ou EPIC 08 (Airflow). Nenhuma pendência de Docker/CI
+em aberto. Seguir SPEC → discussão antes de implementar, como combinado
+desde a API-001.
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como
