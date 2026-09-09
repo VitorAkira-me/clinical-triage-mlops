@@ -200,7 +200,8 @@ registrada na sessão de discovery.)*
   da API; dashboard mostra os 4 painéis com dados reais após chamadas ao `/predict`
 - **Dependências**: DOCK-001
 - **Complexidade**: alta
-- **Status**: IN PROGRESS — Passo 1 de 5 (spec em
+- **Status**: IN PROGRESS — Passo 3 de 5 (RED, negócio e compose feitos; faltam
+  `prometheus.yml` real e provisionamento do Grafana — spec em
   [docs/specs/OBS-001.md](specs/OBS-001.md))
 
 ---

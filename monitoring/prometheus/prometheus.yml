@@ -1,0 +1,13 @@
+# PLACEHOLDER TEMPORÁRIO — OBS-001, Passo 3.
+# Existe só para o `docker-compose up` não quebrar (o Prometheus falha ao subir sem um
+# prometheus.yml montado). Este NÃO é o scrape config real da API — isso é o Passo 4
+# (docs/specs/OBS-001.md). Conteúdo abaixo é o exemplo padrão da imagem oficial
+# (self-scrape do próprio Prometheus), sem nada específico deste projeto ainda.
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
