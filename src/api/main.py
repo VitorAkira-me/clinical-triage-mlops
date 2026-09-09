@@ -6,6 +6,7 @@ from typing import Any
 
 from fastapi import FastAPI, Request
 import joblib
+from prometheus_client import Counter, Histogram
 from prometheus_fastapi_instrumentator import Instrumentator, metrics
 
 from src.api.schemas import HealthResponse, PredictRequest, PredictResponse
@@ -77,6 +78,45 @@ instrumentator.add(
 )
 instrumentator.instrument(app).expose(app, endpoint="/metrics")
 
+# Métricas de negócio — OBS-001, Passo 2. Via prometheus_client direto (não pelo
+# instrumentator, que é especializado em métricas HTTP genéricas). Funcionam como proxy
+# de drift: não há rótulo verdadeiro disponível em produção, então a distribuição de
+# classes previstas e a confiança do modelo são os sinais indiretos que temos.
+PREDICTIONS_TOTAL = Counter(
+    "triage_predictions_total",
+    "Total de predições feitas pela API, por classe prevista.",
+    ["classe_prevista"],
+)
+
+# A probabilidade da classe vencedora nunca fica abaixo de 1/3 (é o máximo de 3 valores
+# que somam 1) — buckets abaixo disso não discriminam nada. Mais resolução perto de 1.0:
+# a ML-003/ADR-002 documentaram separação perfeita (F1 = 1.00, matriz de confusão
+# diagonal, 17.136 exemplos de teste), consistente com um modelo linear saturado em alta
+# confiança — mas isso é uma HIPÓTESE a confirmar com tráfego real (a ML-003 não mediu a
+# distribuição de probabilidade em si, só a classe vencedora), não um número medido.
+PREDICTION_CONFIDENCE_BUCKETS = (
+    0.34,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9,
+    0.95,
+    0.98,
+    0.99,
+    0.995,
+    0.999,
+    1.0,
+)
+
+PREDICTION_CONFIDENCE = Histogram(
+    "triage_prediction_confidence",
+    "Probabilidade (confiança) da classe prevista em cada chamada a /predict.",
+    ["classe_prevista"],
+    buckets=PREDICTION_CONFIDENCE_BUCKETS,
+)
+
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
@@ -91,4 +131,8 @@ def predict(request: PredictRequest, req: Request) -> PredictResponse:
         str(classe): float(p) for classe, p in zip(pipeline.classes_, proba, strict=True)
     }
     urgencia = max(probabilidades, key=probabilidades.get)
+
+    PREDICTIONS_TOTAL.labels(classe_prevista=urgencia).inc()
+    PREDICTION_CONFIDENCE.labels(classe_prevista=urgencia).observe(probabilidades[urgencia])
+
     return PredictResponse(urgencia=urgencia, probabilidades=probabilidades)
