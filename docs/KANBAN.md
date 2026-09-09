@@ -183,7 +183,25 @@ registrada na sessão de discovery.)*
 
 ## IN PROGRESS
 
-*(nenhuma tarefa aberta)*
+### OBS-001 — Observabilidade da API (Prometheus + Grafana)
+- **Objetivo**: instrumentar a API com métricas Prometheus (RED + negócio) e um dashboard
+  Grafana, funcionando como proxy de drift já que não há rótulo verdadeiro em produção
+- **Motivação**: EPIC 09 do roadmap; hoje a API roda sem nenhuma visibilidade operacional
+- **Vou aprender**: `prometheus-fastapi-instrumentator` (RED automático), `prometheus_client`
+  para métricas de negócio customizadas, provisionamento de Grafana via arquivo (sem clique na
+  UI), cuidado com cardinalidade de labels
+- **Pré-requisitos**: DOCK-001 concluído
+- **Passos** (um de cada vez, com parada para revisão entre eles): 1) RED metrics via
+  `prometheus-fastapi-instrumentator`; 2) métricas de negócio customizadas (contador de
+  predições por classe + histograma de confiança); 3) `docker-compose.yml` unindo API +
+  Prometheus + Grafana; 4) `prometheus.yml` com scrape da API; 5) provisionamento do Grafana
+  (datasource + dashboard de 4 painéis)
+- **Critério de aceite**: `docker-compose up` sobe os 3 serviços; Prometheus coleta as métricas
+  da API; dashboard mostra os 4 painéis com dados reais após chamadas ao `/predict`
+- **Dependências**: DOCK-001
+- **Complexidade**: alta
+- **Status**: IN PROGRESS — Passo 1 de 5 (spec em
+  [docs/specs/OBS-001.md](specs/OBS-001.md))
 
 ---
 

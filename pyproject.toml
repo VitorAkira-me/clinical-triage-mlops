@@ -19,6 +19,7 @@ dependencies = [
     "scikit-learn",
     "prometheus-client",
     "python-dotenv>=1.2.3",
+    "prometheus-fastapi-instrumentator>=8.1.0",
 ]
 
 # Dependências de notebook/EDA/treino — NÃO usadas pela API de inferência (src/api/).

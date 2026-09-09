@@ -64,6 +64,29 @@ def test_health_ok(client: TestClient) -> None:
     assert response.json() == {"status": "ok"}
 
 
+def test_metrics_exposes_red_metrics_after_a_request(client: TestClient) -> None:
+    client.post("/predict", json={"clinical_notes": "patient stable minimal distress"})
+
+    response = client.get("/metrics")
+
+    assert response.status_code == 200
+    body = response.text
+    assert 'http_requests_total{handler="/predict",method="POST",status="2xx"}' in body
+    assert "http_request_duration_seconds_bucket" in body
+    assert "http_request_duration_highr_seconds_bucket" in body
+
+
+def test_metrics_excludes_health_checks(client: TestClient) -> None:
+    client.get("/health")
+
+    body = client.get("/metrics").text
+
+    # /health é chamado a cada 30s pelo HEALTHCHECK do Docker (DOCK-001) — se aparecesse
+    # aqui, inflaria a métrica de "taxa de requisições" com heartbeat de infraestrutura
+    # em vez de tráfego de negócio (OBS-001, ver spec, seção Riscos).
+    assert '"/health"' not in body
+
+
 def test_startup_fails_with_clear_message_when_model_missing(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
