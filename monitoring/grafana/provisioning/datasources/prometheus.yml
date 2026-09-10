@@ -1,0 +1,15 @@
+# OBS-001, Passo 5 — provisionado por arquivo (não pela UI), pelo mesmo motivo do
+# docker-compose.yml e do prometheus.yml: precisa sobreviver a um `git clone` em outra
+# máquina, sem passo manual de configuração.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    # "prometheus" é o nome do serviço no docker-compose.yml, resolvido pelo DNS
+    # interno do Compose — mesmo raciocínio do target do scrape (Passo 4).
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false

@@ -1,0 +1,86 @@
+{
+  "title": "Clinical Triage — Observabilidade (OBS-001)",
+  "uid": "obs-001-clinical-triage",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": { "from": "now-15m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Taxa de requisições (por rota)",
+      "description": "http_requests_total (Passo 1, RED) — exclui /health e /metrics (excluded_handlers).",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (handler) (rate(http_requests_total[$__rate_interval]))",
+          "legendFormat": "{{handler}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Latência p95 (por rota)",
+      "description": "histogram_quantile(0.95, ...) sobre http_request_duration_seconds_bucket (Passo 1) — buckets calibrados para latência sub-segundo (ver RNF5, docs/specs/OBS-001.md).",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum by (le, handler) (rate(http_request_duration_seconds_bucket[$__rate_interval])))",
+          "legendFormat": "{{handler}} p95",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Distribuição de classes previstas ao longo do tempo",
+      "description": "rate(triage_predictions_total) por classe_prevista (Passo 2) — proxy de drift: mudança anormal na proporção de urgente/atencao/normal é sinal de alerta mesmo sem rótulo verdadeiro.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": {}, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum by (classe_prevista) (rate(triage_predictions_total[$__rate_interval]))",
+          "legendFormat": "{{classe_prevista}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Confiança por classe (p50 / p95)",
+      "description": "histogram_quantile sobre triage_prediction_confidence_bucket (Passo 2), uma linha por classe_prevista — linhas simples, não heatmap (decisão do Passo 5). Queda sistemática precede queda real de performance.",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "min": 0, "max": 1 }, "overrides": [] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.5, sum by (le, classe_prevista) (rate(triage_prediction_confidence_bucket[$__rate_interval])))",
+          "legendFormat": "{{classe_prevista}} p50",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum by (le, classe_prevista) (rate(triage_prediction_confidence_bucket[$__rate_interval])))",
+          "legendFormat": "{{classe_prevista}} p95",
+          "refId": "B"
+        }
+      ]
+    }
+  ]
+}

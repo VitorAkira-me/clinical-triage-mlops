@@ -59,23 +59,30 @@ apontar a inconsistência e pedir decisão.
 ## 7. Current State
 
 ```
-Current Phase: STEP 3 → STEP 4
-Current Step: STEP 4 (CI/CD) concluído na metade CI; CD segue no EPIC 12
+Current Phase: STEP 4 → STEP 5
+Current Step: EPIC 09 (Observabilidade) concluído
 Current Task: nenhuma tarefa aberta — próxima a definir
-Last Completed: CI-001 — pipeline `.github/workflows/ci.yml` (lint → testes
-→ build) via GitHub Actions, branch protection em `main` com os 3 jobs
-como required status checks. Validado com run vermelho e verde reais
-(PR #6): commit proposital quebrando lint → job `lint` falha, `build`
-skipado (`needs: [lint, test]`); com branch protection ativa,
-`mergeStateStatus` vira `BLOCKED` e `gh pr merge` é recusado pelo
-GitHub — não é só sinal, bloqueia de fato. DOCK-001 (Dockerfile
-single-stage, imagem final 132 MB) mergeado em `main` nesta mesma
-sessão, antes do CI-001 (o job de build depende do Dockerfile existir).
+Last Completed: OBS-001 — API instrumentada com Prometheus (RED via
+`prometheus-fastapi-instrumentator` + métricas de negócio
+`triage_predictions_total`/`triage_prediction_confidence` via
+`prometheus_client`), `docker-compose.yml` (API+Prometheus+Grafana,
+`depends_on: condition: service_healthy` reaproveitando o HEALTHCHECK da
+DOCK-001), scrape real e dashboard Grafana provisionado por arquivo (4
+painéis). Rodados de verdade `notebooks/01_eda_dataset.ipynb` e
+`02_baseline.ipynb` com o HF_TOKEN do usuário — modelo real (ML-003)
+gerado pela primeira vez nesta sessão (9044 bytes), resultado idêntico ao
+`docs/experiments/ML-003-baseline-metrics.json` já commitado. Achado
+principal: distribuição real de confiança do baseline satura numa faixa
+de ~0,005 de largura perto de 1.0 — buckets do histograma recalibrados
+contra tráfego real (antes: hipótese; `histogram_quantile` foi de `NaN`
+para valores reais). `scripts/gen_placeholder_model.py` ganhou guard
+`--force` pra nunca sobrescrever um `.joblib` real sem querer.
 Next Recommended Action: próximo STEP do roadmap a definir — candidatos
-naturais são EPIC 06 (testes, se quiser aprofundar cobertura além dos
-testes da API-001) ou EPIC 08 (Airflow). Nenhuma pendência de Docker/CI
-em aberto. Seguir SPEC → discussão antes de implementar, como combinado
-desde a API-001.
+naturais são EPIC 06 (testes, aprofundar cobertura), EPIC 08 (Airflow,
+retraining automatizado) ou EPIC 10/11 (otimização de inferência +
+benchmark). Nenhuma pendência de Docker/CI/Observabilidade em aberto.
+Seguir SPEC → discussão antes de implementar, como combinado desde a
+API-001.
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como

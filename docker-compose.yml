@@ -1,0 +1,40 @@
+# OBS-001, Passo 3 — API + Prometheus + Grafana para demonstração local.
+# Sem `version:` (obsoleto no Compose Spec atual). Sem volume nomeado persistente:
+# dados do Prometheus/Grafana são efêmeros de propósito (ver docs/specs/OBS-001.md,
+# seção "Por que evitar volume persistente não compromete nada").
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    # HEALTHCHECK já definido no Dockerfile (DOCK-001) — reaproveitado abaixo pelo
+    # depends_on do prometheus/grafana, sem inventar um segundo mecanismo de espera.
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "9090:9090"
+    volumes:
+      # PLACEHOLDER até o Passo 4 — ver monitoring/prometheus/prometheus.yml.
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      # Senha de desenvolvimento local — gestão de segredo é tema de ambiente
+      # produtivo, fora de escopo aqui (ver docs/specs/OBS-001.md).
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      # Provisionamento real (datasource + dashboard) chega no Passo 5; pastas
+      # existem mas estão vazias por enquanto — Grafana sobe normalmente sem nada
+      # provisionado, só "em branco".
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
