@@ -88,25 +88,36 @@ PREDICTIONS_TOTAL = Counter(
     ["classe_prevista"],
 )
 
-# A probabilidade da classe vencedora nunca fica abaixo de 1/3 (é o máximo de 3 valores
-# que somam 1) — buckets abaixo disso não discriminam nada. Mais resolução perto de 1.0:
-# a ML-003/ADR-002 documentaram separação perfeita (F1 = 1.00, matriz de confusão
-# diagonal, 17.136 exemplos de teste), consistente com um modelo linear saturado em alta
-# confiança — mas isso é uma HIPÓTESE a confirmar com tráfego real (a ML-003 não mediu a
-# distribuição de probabilidade em si, só a classe vencedora), não um número medido.
+# RECALIBRADO na OBS-001 Passo 5 contra o baseline REAL (não mais hipótese): 90 chamadas
+# reais a /predict, textos amostrados do dataset de verdade (30 por classe), confirmaram
+# separação perfeita (100% de acerto, como a ML-003/ADR-002 já documentavam) — mas a
+# confiança ficou muito mais colada em 1.0 do que a hipótese original previa: toda a
+# massa caiu entre 0.9949 e 0.9997 (largura ~0.005!), não "alta confiança" em sentido
+# genérico. Os buckets antigos (0.9, 0.95, 0.98, 0.99, 0.995, 0.999, 1.0) jogariam
+# praticamente tudo nos 2 últimos buckets — mesmo problema de saturação já visto na
+# calibração de latência do Passo 1, só que mais extremo aqui. Faixa baixa (0.34 a 0.9)
+# mantida por segurança (nunca observada na prática, mas matematicamente possível se
+# um texto não bater com nenhum padrão do template); resolução real concentrada em
+# [0.99, 1.0], onde o baseline de fato vive.
 PREDICTION_CONFIDENCE_BUCKETS = (
     0.34,
-    0.4,
     0.5,
-    0.6,
     0.7,
-    0.8,
     0.9,
     0.95,
     0.98,
     0.99,
+    0.993,
     0.995,
+    0.996,
+    0.997,
+    0.998,
+    0.9985,
     0.999,
+    0.9993,
+    0.9995,
+    0.9997,
+    0.9999,
     1.0,
 )
 

@@ -1,13 +1,12 @@
-# PLACEHOLDER TEMPORÁRIO — OBS-001, Passo 3.
-# Existe só para o `docker-compose up` não quebrar (o Prometheus falha ao subir sem um
-# prometheus.yml montado). Este NÃO é o scrape config real da API — isso é o Passo 4
-# (docs/specs/OBS-001.md). Conteúdo abaixo é o exemplo padrão da imagem oficial
-# (self-scrape do próprio Prometheus), sem nada específico deste projeto ainda.
+# OBS-001, Passo 4 — scrape real da API (substitui o self-scrape placeholder do Passo 3).
+# "api" é o nome do serviço no docker-compose.yml, resolvido pelo DNS interno do Compose —
+# "localhost" de dentro deste container apontaria para o próprio Prometheus, não para a API.
+# 8000 é a porta que o Dockerfile expõe (EXPOSE 8000) e o uvicorn escuta dentro do container.
 
 global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: "prometheus"
+  - job_name: "clinical-triage-api"
     static_configs:
-      - targets: ["localhost:9090"]
+      - targets: ["api:8000"]

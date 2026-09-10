@@ -171,6 +171,51 @@ Status.
   vermelho→bloqueado→verde→liberado, com saída real de `gh run watch`/`gh pr view`/`gh pr merge`
   em cada etapa (sem número ou resultado inventado).
 
+### OBS-001 — Observabilidade da API (Prometheus + Grafana)
+- **Objetivo**: instrumentar a API com métricas Prometheus (RED + negócio) e um dashboard
+  Grafana, funcionando como proxy de drift já que não há rótulo verdadeiro em produção
+- **Motivação**: EPIC 09 do roadmap; a API rodava sem nenhuma visibilidade operacional
+- **Dependências**: DOCK-001
+- **Complexidade**: alta
+- **Resultado**: spec em [docs/specs/OBS-001.md](specs/OBS-001.md), 5 passos, todos implementados
+  e validados de verdade (nenhum número inventado):
+
+  **Passo 1** — `prometheus-fastapi-instrumentator` para RED automático. Achado real: `.instrument(app)`
+  sozinho não grava métrica nenhuma, precisa de `.add(metrics.default(...))`. `/health`/`/metrics`
+  excluídos (heartbeat do Docker não é tráfego de negócio). Buckets de latência recalibrados
+  (0.5ms–10s) — o padrão da lib (mínimo 10ms) daria zero resolução pra um modelo linear leve.
+
+  **Passo 2** — métricas de negócio via `prometheus_client` direto: `triage_predictions_total`
+  (Counter) e `triage_prediction_confidence` (Histogram), ambas com label `classe_prevista` (não
+  agregado global — mais diagnóstico, cardinalidade trivial).
+
+  **Passo 3** — `docker-compose.yml`: API via `build: .` (sem registry), Prometheus/Grafana com
+  `depends_on: condition: service_healthy` reaproveitando o `HEALTHCHECK` da DOCK-001, sem volume
+  persistente (efêmero é suficiente pro objetivo de demonstração).
+
+  **Passo 4** — `prometheus.yml` real: scrape em `api:8000` (nome do serviço, não `localhost`).
+  Validado com número batendo exato: 3 chamadas reais → `triage_predictions_total` no Prometheus
+  mostrou exatamente a mesma contagem.
+
+  **Passo 5** — provisionamento do Grafana por arquivo (datasource + dashboard, 4 painéis: taxa
+  de requisições, latência p95, distribuição de classes, confiança p50/p95 por classe). Antes de
+  implementar, **verificação**: não existe nem nunca existiu `.joblib` versionado no repo
+  (gitignored por design) — rodados de verdade `notebooks/01_eda_dataset.ipynb` (dataset real,
+  87.234 linhas, mesmo vazamento do ADR-002 confirmado com dado real) e `02_baseline.ipynb`
+  (resultado idêntico, byte a byte, ao `docs/experiments/ML-003-baseline-metrics.json` já
+  commitado). **Achado principal do passo**: a hipótese de calibração de confiança do Passo 2
+  era direcionalmente certa mas conservadora demais — a distribuição real do baseline satura
+  numa faixa de ~0,005 de largura (`0.9949`–`0.9997`), não numa faixa genérica de "alta
+  confiança"; buckets recalibrados contra 90 chamadas reais (dataset de verdade, 30 por classe),
+  `histogram_quantile` foi de `NaN` para valores reais e coerentes (`p50≈0.9994`, `p95≈0.9997`).
+  Validação em três camadas: Prometheus direto, `/api/dashboards/uid/...` do Grafana
+  (`provisionado: true`), e proxy de query do próprio Grafana batendo com o número do Prometheus.
+  `scripts/gen_placeholder_model.py` ganhou um guard (`--force`) pra nunca mais sobrescrever um
+  `.joblib` real sem querer.
+
+  Fora de escopo mantido: Alertmanager, detecção estatística formal de drift (o card entrega um
+  proxy visual, não um teste estatístico), autenticação do `/metrics`/Grafana, tracing.
+
 ---
 
 ## TODO
@@ -183,37 +228,18 @@ registrada na sessão de discovery.)*
 
 ## IN PROGRESS
 
-### OBS-001 — Observabilidade da API (Prometheus + Grafana)
-- **Objetivo**: instrumentar a API com métricas Prometheus (RED + negócio) e um dashboard
-  Grafana, funcionando como proxy de drift já que não há rótulo verdadeiro em produção
-- **Motivação**: EPIC 09 do roadmap; hoje a API roda sem nenhuma visibilidade operacional
-- **Vou aprender**: `prometheus-fastapi-instrumentator` (RED automático), `prometheus_client`
-  para métricas de negócio customizadas, provisionamento de Grafana via arquivo (sem clique na
-  UI), cuidado com cardinalidade de labels
-- **Pré-requisitos**: DOCK-001 concluído
-- **Passos** (um de cada vez, com parada para revisão entre eles): 1) RED metrics via
-  `prometheus-fastapi-instrumentator`; 2) métricas de negócio customizadas (contador de
-  predições por classe + histograma de confiança); 3) `docker-compose.yml` unindo API +
-  Prometheus + Grafana; 4) `prometheus.yml` com scrape da API; 5) provisionamento do Grafana
-  (datasource + dashboard de 4 painéis)
-- **Critério de aceite**: `docker-compose up` sobe os 3 serviços; Prometheus coleta as métricas
-  da API; dashboard mostra os 4 painéis com dados reais após chamadas ao `/predict`
-- **Dependências**: DOCK-001
-- **Complexidade**: alta
-- **Status**: IN PROGRESS — Passo 3 de 5 (RED, negócio e compose feitos; faltam
-  `prometheus.yml` real e provisionamento do Grafana — spec em
-  [docs/specs/OBS-001.md](specs/OBS-001.md))
+*(nenhuma tarefa aberta)*
 
 ---
 
 ## BACKLOG (nível de épico, não detalhado ainda)
 
-- EPIC 05 — Docker (DOCK-001 concluído; compose fica para o EPIC 09)
+- EPIC 05 — Docker (DOCK-001 concluído; compose entregue na OBS-001)
 - EPIC 06 — Testes
 - EPIC 07 — CI/CD (GitHub Actions) (CI-001 concluído — cobre só o CI; o CD segue dependendo de
   registry/cloud, EPIC 12)
 - EPIC 08 — Airflow (DAG de treino)
-- EPIC 09 — Observabilidade (Prometheus + Grafana)
+- EPIC 09 — Observabilidade (Prometheus + Grafana) (OBS-001 concluído)
 - EPIC 10 — Otimização de inferência (ONNX/quantização/pruning)
 - EPIC 11 — Benchmark (latência p50/p95, tamanho de modelo)
 - EPIC 12 — Arquitetura de cloud (ADR-005)
