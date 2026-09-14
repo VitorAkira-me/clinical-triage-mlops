@@ -59,29 +59,24 @@ apontar a inconsistência e pedir decisão.
 ## 7. Current State
 
 ```
-Current Phase: STEP 6 → STEP 7
-Current Step: EPIC 10/11 (ONNX + benchmark) concluídos; EPIC 08/09
-concluídos em sessões anteriores
-Current Task: nenhuma tarefa aberta — próxima a definir
-Last Completed: OPT-001/BENCH-001 — pipeline inteiro (TfidfVectorizer +
-LogisticRegression) convertido pra ONNX via `skl2onnx`, funcionou de
-primeira (fallback de classificador isolado implementado mas não
-acionado). Corretude validada antes de medir latência: 150 textos reais,
-150/150 classes batendo, diff máxima de probabilidade 8.11e-08. Latência
-real (300 iterações): sklearn mediana 0.40ms vs. ONNX 0.036ms — ~11x de
-speedup, reproduzido em 3 execuções. Tamanho: 9044 bytes (.joblib) vs.
-7076 bytes (.onnx). Script: `benchmarks/opt001_onnx_benchmark.py`.
-Antes disso, nesta mesma sessão: fixado `scikit-learn==1.9.0` na API e
-no container do Airflow (eliminava o drift de versão documentado no
-AIR-001) e retreinado o baseline sem o warning de versão.
-Next Recommended Action: EPIC 12 (arquitetura de cloud, ADR-005) é o
-próximo passo OBRIGATÓRIO, não opcional — é o STEP 10 do
-docs/ROADMAP.md, única etapa antes do STEP 11 (documentação final).
-Achado de auditoria (pré-README, nesta sessão): docs/KANBAN.md listava
-isso como item plano de backlog, sem sinalizar a obrigatoriedade que o
-ROADMAP já definia — corrigido. EPIC 06 (testes) continua opcional/nice-
-to-have, sem STEP associado no ROADMAP. Seguir SPEC → discussão antes de
-implementar, como combinado desde a API-001.
+Current Phase: STEP 10/11 concluídos → STEP 12 (vídeo)
+Current Step: ROADMAP completo, exceto o vídeo STAR
+Current Task: nenhuma tarefa aberta — só falta o vídeo
+Last Completed: ARCH-001 (ADR-005, decisão de arquitetura de cloud —
+real-time/AWS, análise sem deploy) e DOC-002 (README reestruturado em
+11 seções: visão geral, decisão de nuvem, como executar, resultados,
+monitoramento, limitações/lições). Antes de escrever, auditoria
+dedicada de specs/ADRs/KANBAN contra o código — 3 inconsistências reais
+corrigidas (EPIC 12 subpriorizado no KANBAN vs. STEP 10 obrigatório do
+ROADMAP; AIR-001/KANBAN diziam risco de scikit-learn "não corrigido"
+quando já tinha sido; API-001 citava métricas/testes desatualizados).
+Seção "Como executar" do README validada de verdade nesta sessão: API
+standalone, stack completa via docker compose (5 painéis confirmados
+via Prometheus direto + proxy do Grafana — o 5º nunca tinha sido
+validado visualmente antes), DAG do Airflow.
+Next Recommended Action: só falta o vídeo STAR (EPIC 14) — todo o
+roadmap de engenharia e documentação está concluído. Sem próxima tarefa
+de código pendente.
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como

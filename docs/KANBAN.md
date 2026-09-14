@@ -268,6 +268,40 @@ Status.
   servir via ONNX em produção (isto é comparação/benchmark, não mudança na API);
   quantização/pruning.
 
+### ARCH-001 — Decisão de arquitetura de nuvem (análise, sem implementação)
+- **Objetivo**: análise textual exigida pelo Tech Challenge — batch vs. real-time e qual provedor
+  (AWS/Azure/GCP), sem deploy real
+- **Motivação**: `STEP 10` do `docs/ROADMAP.md`, única etapa obrigatória antes do `STEP 11`
+  (documentação final) — achado da auditoria pré-README: estava registrado como item plano de
+  BACKLOG, sem essa sinalização de obrigatoriedade
+- **Dependências**: nenhuma (análise, não depende de código)
+- **Complexidade**: baixa (redação, decisão já discutida)
+- **Resultado**: [ADR-005](decisions/ADR-005-cloud-strategy.md). Real-time (não batch) pra API —
+  constatação do que já foi construído (API síncrona desde a API-001, latência medida na
+  OBS-001/OPT-001), não escolha nova; treino via Airflow já é batch por natureza. Provedor
+  recomendado: AWS (ECS Fargate + Amazon Managed Prometheus + Amazon Managed Grafana + MWAA) —
+  critério: menor distância entre o que já existe localmente (Docker + Prometheus + Grafana +
+  Airflow) e o equivalente gerenciado, não lock-in prévio. GCP Cloud Run registrado como
+  alternativa honesta se custo/simplicidade pesar mais que continuidade da stack de
+  observabilidade. Resumo no README seção 2.
+
+### DOC-002 — README final (Documentação)
+- **Objetivo**: consolidar o README com visão geral, decisão de arquitetura de nuvem, como
+  executar (validado de verdade), resultados, monitoramento e limitações/lições aprendidas
+- **Motivação**: critério de Documentação do Tech Challenge (15% da nota); última frente antes
+  do vídeo STAR
+- **Dependências**: ARCH-001, OPT-001/BENCH-001, OBS-001, AIR-001, DOCK-001, DOC-001
+- **Complexidade**: média
+- **Resultado**: `README.md` reestruturado (11 seções). Antes de escrever, auditoria dedicada de
+  `docs/specs/*.md`/`docs/decisions/*.md`/KANBAN/CLAUDE.md contra o que foi de fato implementado
+  — 3 inconsistências reais corrigidas (detalhes no commit `docs: audita...`), evitando que o
+  README citasse algo que os specs originais não batiam mais. Seção 3 ("Como executar") validada
+  de verdade nesta sessão, do zero: build+run da API standalone (`curl` real colado), stack
+  completa via `docker compose up` incluindo o 5º painel do dashboard (nunca confirmado
+  visualmente antes — validado ponta a ponta via Prometheus direto e proxy do Grafana, mesmo
+  número nos dois), e a DAG do Airflow. Seção 6 (Limitações e lições aprendidas) escrita
+  pensando no "Result" do vídeo STAR, como pedido.
+
 ---
 
 ## TODO
@@ -286,11 +320,8 @@ registrada na sessão de discovery.)*
 
 ## BACKLOG (nível de épico, não detalhado ainda)
 
-**Próximo obrigatório: EPIC 12.** É o `STEP 10` do [`docs/ROADMAP.md`](ROADMAP.md), a única etapa
-que falta antes de `STEP 11` (documentação final). Não é "backlog eventual" como os itens abaixo
-sem STEP associado — o ROADMAP já definia a *análise* (não o deploy) como obrigatória; a listagem
-plana abaixo não deixava isso claro até esta auditoria (achado registrado em
-[OBS-001](specs/OBS-001.md), seção "Interface — Passo 3").
+**Próximo: EPIC 14 (vídeo STAR).** Última etapa do `docs/ROADMAP.md` — todo o resto, incluindo
+`STEP 10` (arquitetura de cloud) e `STEP 11` (documentação final), está concluído.
 
 - EPIC 05 — Docker (DOCK-001 concluído; compose entregue na OBS-001)
 - EPIC 06 — Testes
@@ -302,7 +333,7 @@ plana abaixo não deixava isso claro até esta auditoria (achado registrado em
   quantização/pruning fora de escopo)
 - EPIC 11 — Benchmark (latência p50/p95, tamanho de modelo) (BENCH-001 concluído — latência
   e tamanho sklearn vs. ONNX medidos)
-- **EPIC 12 — Arquitetura de cloud (ADR-005) — `STEP 10`, obrigatório (análise teórica: batch
-  vs. real-time, AWS vs. Azure vs. GCP; deploy real não é obrigatório, conforme o ROADMAP)**
-- EPIC 13 — Documentação final (`STEP 11` — depende do EPIC 12 estar fechado)
+- EPIC 12 — Arquitetura de cloud (ADR-005) — `STEP 10`, **concluído** (ARCH-001: análise
+  teórica, batch vs. real-time, AWS vs. Azure vs. GCP; deploy real não era obrigatório)
+- EPIC 13 — Documentação final (`STEP 11`) — **concluído** (DOC-002: README reestruturado)
 - EPIC 14 — Vídeo STAR
