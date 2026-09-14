@@ -1,6 +1,6 @@
 pandas
 pyarrow==25.0.1
-scikit-learn
+scikit-learn==1.9.0
 joblib
 huggingface_hub
 python-dotenv
