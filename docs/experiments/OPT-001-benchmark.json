@@ -1,0 +1,35 @@
+{
+  "classes": [
+    "atencao",
+    "normal",
+    "urgente"
+  ],
+  "approach": "full_pipeline",
+  "correctness": {
+    "n_samples": 150,
+    "labels_match": 150,
+    "labels_match_pct": 1.0,
+    "max_abs_proba_diff": 8.108175308940702e-08,
+    "probabilities_close_atol_1e-4": true
+  },
+  "onnx_path": "models/tfidf_logreg_baseline.onnx",
+  "latency_text": "67yo M c/o chest pain, moderate distress. Rapid assessment indicates emergent condition.",
+  "sklearn_original": {
+    "n_iterations": 300,
+    "mean_ms": 0.42714199943778414,
+    "median_ms": 0.40254999476019293,
+    "p95_ms": 0.5499899954884313,
+    "min_ms": 0.38350000977516174,
+    "max_ms": 0.7424000068567693
+  },
+  "onnx": {
+    "n_iterations": 300,
+    "mean_ms": 0.04015033298249667,
+    "median_ms": 0.03619998460635543,
+    "p95_ms": 0.04975000047124924,
+    "min_ms": 0.03480000304989517,
+    "max_ms": 0.10830000974237919
+  },
+  "speedup_median": 11.120170329838192,
+  "speedup_p95": 11.055075181482122
+}

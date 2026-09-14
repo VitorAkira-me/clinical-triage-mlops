@@ -248,6 +248,27 @@ Status.
   o próximo passo (ONNX/otimização) for sensível à versão exata do scikit-learn — vale fixar
   as duas pontas na mesma versão antes de seguir.
 
+### OPT-001 / BENCH-001 — Otimização de inferência (ONNX) + benchmark
+- **Objetivo**: aplicar uma técnica de otimização de latência (ONNX, citado como exemplo no
+  enunciado oficial) e comparar com o original — corretude primeiro, latência depois
+- **Motivação**: requisito oficial do Tech Challenge, 20% da nota (maior peso restante)
+- **Dependências**: ML-003 (usa `models/tfidf_logreg_baseline.joblib`)
+- **Complexidade**: média
+- **Resultado**: spec em [docs/specs/OPT-001.md](specs/OPT-001.md),
+  `benchmarks/opt001_onnx_benchmark.py`. **Pipeline inteiro** (TfidfVectorizer +
+  LogisticRegression) convertido pra ONNX via `skl2onnx` funcionou de primeira — não precisou
+  do fallback de classificador isolado (implementado e disponível no script, mas não
+  acionado). Corretude validada em 150 textos reais do dataset antes de medir latência: 150/150
+  classes batendo, diferença máxima de probabilidade `8.11e-08` (tolerância `1e-4`). Latência
+  real (300 iterações, mesma entrada, mesma máquina, após warmup):
+  sklearn mediana 0.40ms/p95 0.55ms vs. ONNX mediana 0.036ms/p95 0.050ms — **~11x de speedup**
+  (consistente em 3 execuções independentes). Tamanho do artefato: 9.044 bytes (`.joblib`) vs.
+  7.076 bytes (`.onnx`), -22%. Resultado completo em
+  [docs/experiments/OPT-001-benchmark.json](../docs/experiments/OPT-001-benchmark.json); resumo
+  pronto pra colar no README na própria spec. Fora de escopo: trocar o `/predict` da API pra
+  servir via ONNX em produção (isto é comparação/benchmark, não mudança na API);
+  quantização/pruning.
+
 ---
 
 ## TODO
@@ -272,8 +293,10 @@ registrada na sessão de discovery.)*
   registry/cloud, EPIC 12)
 - EPIC 08 — Airflow (DAG de treino) (AIR-001 concluído)
 - EPIC 09 — Observabilidade (Prometheus + Grafana) (OBS-001 concluído)
-- EPIC 10 — Otimização de inferência (ONNX/quantização/pruning)
-- EPIC 11 — Benchmark (latência p50/p95, tamanho de modelo)
+- EPIC 10 — Otimização de inferência (ONNX/quantização/pruning) (OPT-001 concluído — ONNX;
+  quantização/pruning fora de escopo)
+- EPIC 11 — Benchmark (latência p50/p95, tamanho de modelo) (BENCH-001 concluído — latência
+  e tamanho sklearn vs. ONNX medidos)
 - EPIC 12 — Arquitetura de cloud (ADR-005)
 - EPIC 13 — Documentação final
 - EPIC 14 — Vídeo STAR
