@@ -216,6 +216,38 @@ Status.
   Fora de escopo mantido: Alertmanager, detecção estatística formal de drift (o card entrega um
   proxy visual, não um teste estatístico), autenticação do `/metrics`/Grafana, tracing.
 
+### AIR-001 — DAG de treino do baseline (Airflow)
+- **Objetivo**: DAG funcional com 2 tasks (carregar dataset → treinar e salvar o baseline
+  TF-IDF + LogisticRegression da ML-003), rodando de ponta a ponta com sucesso — requisito
+  oficial do Tech Challenge (15% da nota), mais simples que o roadmap original (sem retreino
+  agendado nem sensores)
+- **Motivação**: orquestração via Airflow é requisito explícito do enunciado
+- **Dependências**: ML-003
+- **Complexidade**: média
+- **Resultado**: spec em [docs/specs/AIR-001.md](specs/AIR-001.md). DAG
+  `air001_train_baseline` (`airflow/dags/air001_train_baseline.py`, TaskFlow API,
+  `load_dataset() -> train_baseline()`), container Docker standalone (`airflow/Dockerfile`,
+  `apache/airflow:2.10.5-python3.12` — testado empiricamente que Airflow nativo no Windows
+  quebra, `ImportError` em `DagBag` já na importação básica) separado do
+  `docker-compose.yml` do OBS-001 (menor blast radius). `load_dataset` reusa
+  `data/raw/fedmml_ed_triage_raw.parquet` já existente (gerado na OBS-001 Passo 5), sem rede
+  nem `HF_TOKEN`, com fallback pro cache do HF e por fim download real.
+
+  **Validado de verdade** via `airflow dags test air001_train_baseline 2026-09-14`: as 2 tasks
+  `SUCCESS`, `DagRun ... state=success`; `models/tfidf_logreg_baseline.joblib` confirmado no
+  host (9044 bytes, volume montado — não preso no container), carregado e validado como
+  `sklearn.pipeline.Pipeline` com `classes_ = ['atencao', 'normal', 'urgente']`. Dois problemas
+  reais encontrados e corrigidos na validação: Git-Bash traduzindo `/opt/airflow` pra caminho
+  Windows (`MSYS_NO_PATHCONV=1`) e `pyarrow` sem versão fixada resolvendo pra `19.0.0` no
+  container contra `25.0.1` no host que escreveu o parquet (`OSError: Repetition level
+  histogram size mismatch` — corrigido fixando `pyarrow==25.0.1`).
+
+  **Risco identificado, não corrigido por prazo**: `scikit-learn==1.9.1` no container (sem
+  versão fixada) vs. `1.9.0` na API — `.joblib` carregou certo (`InconsistentVersionWarning`,
+  não erro), mas é drift de ambiente real entre quem treina e quem serve. Vira risco maior se
+  o próximo passo (ONNX/otimização) for sensível à versão exata do scikit-learn — vale fixar
+  as duas pontas na mesma versão antes de seguir.
+
 ---
 
 ## TODO
@@ -238,7 +270,7 @@ registrada na sessão de discovery.)*
 - EPIC 06 — Testes
 - EPIC 07 — CI/CD (GitHub Actions) (CI-001 concluído — cobre só o CI; o CD segue dependendo de
   registry/cloud, EPIC 12)
-- EPIC 08 — Airflow (DAG de treino)
+- EPIC 08 — Airflow (DAG de treino) (AIR-001 concluído)
 - EPIC 09 — Observabilidade (Prometheus + Grafana) (OBS-001 concluído)
 - EPIC 10 — Otimização de inferência (ONNX/quantização/pruning)
 - EPIC 11 — Benchmark (latência p50/p95, tamanho de modelo)

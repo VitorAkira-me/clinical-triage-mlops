@@ -59,30 +59,25 @@ apontar a inconsistência e pedir decisão.
 ## 7. Current State
 
 ```
-Current Phase: STEP 4 → STEP 5
-Current Step: EPIC 09 (Observabilidade) concluído
+Current Phase: STEP 5 → STEP 6
+Current Step: EPIC 08 (Airflow) concluído; EPIC 09 (Observabilidade)
+concluído na sessão anterior
 Current Task: nenhuma tarefa aberta — próxima a definir
-Last Completed: OBS-001 — API instrumentada com Prometheus (RED via
-`prometheus-fastapi-instrumentator` + métricas de negócio
-`triage_predictions_total`/`triage_prediction_confidence` via
-`prometheus_client`), `docker-compose.yml` (API+Prometheus+Grafana,
-`depends_on: condition: service_healthy` reaproveitando o HEALTHCHECK da
-DOCK-001), scrape real e dashboard Grafana provisionado por arquivo (4
-painéis). Rodados de verdade `notebooks/01_eda_dataset.ipynb` e
-`02_baseline.ipynb` com o HF_TOKEN do usuário — modelo real (ML-003)
-gerado pela primeira vez nesta sessão (9044 bytes), resultado idêntico ao
-`docs/experiments/ML-003-baseline-metrics.json` já commitado. Achado
-principal: distribuição real de confiança do baseline satura numa faixa
-de ~0,005 de largura perto de 1.0 — buckets do histograma recalibrados
-contra tráfego real (antes: hipótese; `histogram_quantile` foi de `NaN`
-para valores reais). `scripts/gen_placeholder_model.py` ganhou guard
-`--force` pra nunca sobrescrever um `.joblib` real sem querer.
-Next Recommended Action: próximo STEP do roadmap a definir — candidatos
-naturais são EPIC 06 (testes, aprofundar cobertura), EPIC 08 (Airflow,
-retraining automatizado) ou EPIC 10/11 (otimização de inferência +
-benchmark). Nenhuma pendência de Docker/CI/Observabilidade em aberto.
-Seguir SPEC → discussão antes de implementar, como combinado desde a
-API-001.
+Last Completed: AIR-001 — DAG `air001_train_baseline` (2 tasks: load
+dataset → train baseline), container Docker standalone (Airflow nativo
+não roda no Windows, testado empiricamente). Validado de verdade via
+`airflow dags test`: as 2 tasks `SUCCESS`, `.joblib` real confirmado no
+host (9044 bytes, mesmo resultado da ML-003). Risco identificado, não
+corrigido por prazo: `scikit-learn` do container (1.9.1) vs. da API
+(1.9.0) — drift de ambiente a fixar antes do ONNX se for sensível a
+versão. Também nesta sessão: 5º painel "taxa de erro" no dashboard do
+OBS-001 (`http_requests_total` filtrando status != 2xx).
+Next Recommended Action: EPIC 10/11 (otimização de inferência via ONNX +
+benchmark) é o próximo natural, citado como Passo seguinte pelo usuário.
+Antes de começar, considerar fixar a versão do scikit-learn entre
+airflow/API (risco documentado em docs/specs/AIR-001.md) — portabilidade
+de modelo é mais sensível a isso no contexto de ONNX. Seguir SPEC →
+discussão antes de implementar, como combinado desde a API-001.
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como
