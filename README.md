@@ -108,10 +108,36 @@ DAG com 2 tasks (`load_dataset → train_baseline`), container standalone — **
 roda no Windows** (testado empiricamente: quebra na importação básica), por isso Docker em vez de
 venv local, em qualquer sistema operacional.
 
-```bash
-docker build -t air001-airflow ./airflow
+**Use o script** (builda a imagem, roda a DAG, confirma que o `.joblib` foi de fato atualizado —
+não só que a DAG "reportou sucesso", ver troubleshooting #4 abaixo). Da raiz do repo, ou de
+qualquer diretório — os dois resolvem a raiz sozinhos:
 
-docker run --rm \
+```bash
+# Linux, macOS, Git Bash (Windows)
+./scripts/run_airflow_dag.sh
+```
+
+```powershell
+# PowerShell nativo do Windows
+.\scripts\run_airflow_dag.ps1
+```
+
+`load_dataset` reusa `data/raw/fedmml_ed_triage_raw.parquet` se já existir; senão tenta o cache
+local do Hugging Face; só baixa de verdade (usando o `HF_TOKEN` do `.env`) como último recurso.
+`train_baseline` salva o `.joblib` em `models/` no **host** (volume montado, não preso no
+container) — o mesmo artefato que a API/Docker usam. Decisões em
+[docs/specs/AIR-001.md](docs/specs/AIR-001.md).
+
+<details>
+<summary>Comando manual equivalente (se preferir não usar o script) + troubleshooting real</summary>
+
+```bash
+# Linux / macOS / Git Bash — em Git Bash, MSYS_NO_PATHCONV=1 é obrigatório (ver #1 abaixo)
+cd clinical-triage-mlops   # precisa ser a raiz do repo — não documentado antes, causa
+                           # "no such file or directory" pro ./airflow se você estiver em
+                           # outro diretório (ex: dentro de airflow/)
+docker build -t air001-airflow ./airflow
+MSYS_NO_PATHCONV=1 docker run --rm \
   -e AIRFLOW_HOME=/opt/airflow \
   -e AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/project/airflow/dags \
   -e AIRFLOW__CORE__LOAD_EXAMPLES=False \
@@ -119,15 +145,45 @@ docker run --rm \
   air001-airflow bash -c "airflow db migrate && airflow dags test air001_train_baseline $(date +%F)"
 ```
 
-> **Windows + Git Bash**: prefixe o comando com `MSYS_NO_PATHCONV=1` — o Git Bash traduz
-> `/opt/airflow` para um caminho Windows antes de passar pro Docker, e o Airflow quebra sem essa
-> variável. Irrelevante em Linux/macOS ou PowerShell.
+```powershell
+# PowerShell nativo — sintaxe DIFERENTE da de bash, não é só trocar \ por `
+cd clinical-triage-mlops
+docker build -t air001-airflow ./airflow
+docker run --rm `
+  -e AIRFLOW_HOME=/opt/airflow `
+  -e AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/project/airflow/dags `
+  -e AIRFLOW__CORE__LOAD_EXAMPLES=False `
+  -v "${PWD}:/opt/airflow/project" `
+  air001-airflow bash -c "airflow db migrate && airflow dags test air001_train_baseline $(Get-Date -Format yyyy-MM-dd)"
+```
 
-`load_dataset` reusa `data/raw/fedmml_ed_triage_raw.parquet` se já existir; senão tenta o cache
-local do Hugging Face; só baixa de verdade (usando o `HF_TOKEN` do `.env`) como último recurso.
-`train_baseline` salva o `.joblib` em `models/` no **host** (volume montado, não preso no
-container) — o mesmo artefato que a API/Docker usam. Decisões em
-[docs/specs/AIR-001.md](docs/specs/AIR-001.md).
+**Troubleshooting — achados reais, testados, não hipotéticos** (a versão anterior deste README
+listava só o #1 e #2 como nota de rodapé; havia mais dois problemas reais não documentados,
+achados testando as próprias instruções do zero):
+
+1. **Colar o bloco bash direto no PowerShell quebra tudo**, não é "irrelevante" como uma versão
+   anterior deste README chegou a dizer. `\` não é continuação de linha em PowerShell (é
+   continuação em bash) — cada linha vira um comando separado; `-e`/`-v` são interpretados como
+   cmdlets inexistentes; `docker run --rm` roda sem nenhum argumento (`invalid reference
+   format`). Use o bloco PowerShell acima, com crase (`` ` ``), não barra invertida.
+2. **`$(date +%F)` não existe em PowerShell** — vira uma tentativa de chamar `Get-Date` com um
+   parâmetro `+%F` inválido (`Get-Date : Não é possível associar o parâmetro 'Date'...`). Use
+   `$(Get-Date -Format yyyy-MM-dd)` no bloco PowerShell.
+3. **Git Bash (Windows) traduz `/opt/airflow` para um caminho Windows** antes de passar pro
+   Docker, quebrando `AIRFLOW_HOME` — precisa de `MSYS_NO_PATHCONV=1` antes do `docker run`.
+   Irrelevante em Linux/macOS/PowerShell (não existe essa camada de tradução).
+4. **Uma data de execução anterior ao `start_date` da DAG (2026-01-01) faz o Airflow marcar a
+   run como sucesso *sem rodar nenhuma task*, silenciosamente** — exit code 0, `state=success`,
+   e o `.joblib` nunca é criado. Não é um erro visível, é um "sucesso" vazio — só apareceu porque
+   o script checa se o arquivo foi *atualizado* pela execução, não só se ele existe. Use sempre
+   uma data igual ou posterior ao `start_date` — a data de hoje (`$(date +%F)` /
+   `$(Get-Date -Format yyyy-MM-dd)`) sempre serve, já que a DAG não é agendada e o valor em si
+   não importa pro resultado.
+5. `pyarrow` sem versão fixada resolvia pra uma versão incompatível com a que escreveu o parquet
+   (`OSError: Repetition level histogram size mismatch`) — já corrigido, fixado em
+   `airflow/requirements.txt`; documentado aqui só pra registro, não deveria mais acontecer.
+
+</details>
 
 ### 3.4 CI/CD
 

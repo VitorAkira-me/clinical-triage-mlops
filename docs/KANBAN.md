@@ -247,6 +247,19 @@ Status.
   real entre quem treina e quem serve. Fixado `scikit-learn==1.9.0` nos dois lugares, container
   reconstruído, baseline retreinado via a DAG — `.joblib` resultante sem warning de versão.
 
+  **Re-validação pré-vídeo (achado real, não hipotético)**: usuário seguiu as instruções e não
+  conseguiu subir o ambiente. Causa raiz: o comando documentado era só bash, apresentado como
+  "irrelevante em PowerShell" — falso, colar o bloco literal no PowerShell quebra completamente
+  (`\` não é continuação de linha lá; `$(date +%F)` não existe). Achado mais sério, pego só
+  porque a correção passou a checar o resultado (não só o exit code): uma data de execução
+  anterior ao `start_date` da DAG (2026-01-01) faz o Airflow reportar `state=success` **sem
+  rodar nenhuma task**, silenciosamente — quase reintroduzido pela própria tentativa de corrigir
+  o bug de plataforma com uma data fixa arbitrária (`2024-01-01`, anterior ao `start_date`).
+  Corrigido com dois scripts (`scripts/run_airflow_dag.sh` e `.ps1`, sintaxe nativa de cada
+  shell, data sempre "hoje", confirmação de que o `.joblib` foi *atualizado* pela execução, não
+  só que existe) — validados do zero, sem modelo presente, nos dois shells. Detalhes completos
+  em [docs/specs/AIR-001.md](specs/AIR-001.md), seção "Re-validação pré-vídeo".
+
 ### OPT-001 / BENCH-001 — Otimização de inferência (ONNX) + benchmark
 - **Objetivo**: aplicar uma técnica de otimização de latência (ONNX, citado como exemplo no
   enunciado oficial) e comparar com o original — corretude primeiro, latência depois
