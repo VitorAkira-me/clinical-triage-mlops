@@ -62,18 +62,25 @@ apontar a inconsistência e pedir decisão.
 Current Phase: STEP 10/11 concluídos → STEP 12 (vídeo)
 Current Step: ROADMAP completo, exceto o vídeo STAR
 Current Task: nenhuma tarefa aberta — só falta o vídeo
-Last Completed: ARCH-001 (ADR-005, decisão de arquitetura de cloud —
-real-time/AWS, análise sem deploy) e DOC-002 (README reestruturado em
-11 seções: visão geral, decisão de nuvem, como executar, resultados,
-monitoramento, limitações/lições). Antes de escrever, auditoria
-dedicada de specs/ADRs/KANBAN contra o código — 3 inconsistências reais
-corrigidas (EPIC 12 subpriorizado no KANBAN vs. STEP 10 obrigatório do
-ROADMAP; AIR-001/KANBAN diziam risco de scikit-learn "não corrigido"
-quando já tinha sido; API-001 citava métricas/testes desatualizados).
-Seção "Como executar" do README validada de verdade nesta sessão: API
-standalone, stack completa via docker compose (5 painéis confirmados
-via Prometheus direto + proxy do Grafana — o 5º nunca tinha sido
-validado visualmente antes), DAG do Airflow.
+Last Completed: passe final de documentação pré-vídeo, em duas rodadas.
+(1) Bug real achado testando o runbook do Airflow do zero: instruções
+eram só bash, apresentadas como funcionando em PowerShell (não
+funcionavam), e uma tentativa de simplificar o comando com data fixa
+quase criou um bug pior — Airflow reporta sucesso sem rodar task
+nenhuma se a data for anterior ao start_date da DAG. Corrigido com
+scripts/run_airflow_dag.sh e .ps1, validados do zero nos dois shells.
+Também: painel "Taxa de erro" confirmado como não-bug (ausência real
+de erro, não config errada), exemplos adicionados aos schemas Pydantic
+do /predict (Field + json_schema_extra, validado via /openapi.json).
+(2) README reescrito: tom de IA removido das seções narrativas
+(primeira pessoa, achados concretos na frente), 2 diagramas Mermaid
+(fluxo do projeto, CI/CD), header com badges reais/tabela de
+autor/requisitos/placeholder do vídeo, seção nova "como testar cada
+etapa" com comandos reais. Specs/ADRs auditados — já limpos, não
+reescritos.
+Next Recommended Action: gravar o vídeo STAR e colar o link no README
+(placeholder "[ADICIONAR LINK]" já marcado). Nenhuma pendência de
+código ou documentação em aberto.
 Next Recommended Action: só falta o vídeo STAR (EPIC 14) — todo o
 roadmap de engenharia e documentação está concluído. Sem próxima tarefa
 de código pendente.
