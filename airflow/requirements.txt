@@ -1,0 +1,6 @@
+pandas
+pyarrow==25.0.1
+scikit-learn
+joblib
+huggingface_hub
+python-dotenv
