@@ -59,25 +59,27 @@ apontar a inconsistência e pedir decisão.
 ## 7. Current State
 
 ```
-Current Phase: STEP 5 → STEP 6
-Current Step: EPIC 08 (Airflow) concluído; EPIC 09 (Observabilidade)
-concluído na sessão anterior
+Current Phase: STEP 6 → STEP 7
+Current Step: EPIC 10/11 (ONNX + benchmark) concluídos; EPIC 08/09
+concluídos em sessões anteriores
 Current Task: nenhuma tarefa aberta — próxima a definir
-Last Completed: AIR-001 — DAG `air001_train_baseline` (2 tasks: load
-dataset → train baseline), container Docker standalone (Airflow nativo
-não roda no Windows, testado empiricamente). Validado de verdade via
-`airflow dags test`: as 2 tasks `SUCCESS`, `.joblib` real confirmado no
-host (9044 bytes, mesmo resultado da ML-003). Risco identificado, não
-corrigido por prazo: `scikit-learn` do container (1.9.1) vs. da API
-(1.9.0) — drift de ambiente a fixar antes do ONNX se for sensível a
-versão. Também nesta sessão: 5º painel "taxa de erro" no dashboard do
-OBS-001 (`http_requests_total` filtrando status != 2xx).
-Next Recommended Action: EPIC 10/11 (otimização de inferência via ONNX +
-benchmark) é o próximo natural, citado como Passo seguinte pelo usuário.
-Antes de começar, considerar fixar a versão do scikit-learn entre
-airflow/API (risco documentado em docs/specs/AIR-001.md) — portabilidade
-de modelo é mais sensível a isso no contexto de ONNX. Seguir SPEC →
-discussão antes de implementar, como combinado desde a API-001.
+Last Completed: OPT-001/BENCH-001 — pipeline inteiro (TfidfVectorizer +
+LogisticRegression) convertido pra ONNX via `skl2onnx`, funcionou de
+primeira (fallback de classificador isolado implementado mas não
+acionado). Corretude validada antes de medir latência: 150 textos reais,
+150/150 classes batendo, diff máxima de probabilidade 8.11e-08. Latência
+real (300 iterações): sklearn mediana 0.40ms vs. ONNX 0.036ms — ~11x de
+speedup, reproduzido em 3 execuções. Tamanho: 9044 bytes (.joblib) vs.
+7076 bytes (.onnx). Script: `benchmarks/opt001_onnx_benchmark.py`.
+Antes disso, nesta mesma sessão: fixado `scikit-learn==1.9.0` na API e
+no container do Airflow (eliminava o drift de versão documentado no
+AIR-001) e retreinado o baseline sem o warning de versão.
+Next Recommended Action: próximo STEP a definir — candidatos: EPIC 06
+(testes, aprofundar cobertura), EPIC 12 (arquitetura de cloud, ADR-005)
+ou EPIC 13 (documentação final, ex: colar o resumo do OPT-001 no README
+seção 12, ainda TODO lá apesar de pronto em docs/specs/OPT-001.md).
+Seguir SPEC → discussão antes de implementar, como combinado desde a
+API-001.
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como

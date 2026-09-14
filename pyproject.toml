@@ -32,6 +32,13 @@ data = [
     "huggingface-hub>=1.27.0",
 ]
 
+# OPT-001/BENCH-001 — conversão ONNX + benchmark de latência. Não usado pela API em runtime
+# (a API continua servindo o pipeline sklearn original; ver docs/specs/OPT-001.md).
+benchmark = [
+    "skl2onnx",
+    "onnxruntime",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
