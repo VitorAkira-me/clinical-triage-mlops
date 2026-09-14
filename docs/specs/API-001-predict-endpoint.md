@@ -26,7 +26,10 @@ FastAPI mínima, com um endpoint de predição e um de health-check.
 - Autenticação/autorização
 - CORS
 - Versionamento de rota (`/predict` puro, sem prefixo `/api/v1`)
-- Métricas Prometheus / instrumentação de observabilidade (EPIC 09)
+- ~~Métricas Prometheus / instrumentação de observabilidade (EPIC 09)~~ — **adicionado depois,
+  na OBS-001** (`src/api/main.py` hoje expõe `/metrics`, RED + métricas de negócio). Fora de
+  escopo *aqui* no sentido de "este card não implementa", não "nunca vai existir" — ver
+  [docs/specs/OBS-001.md](OBS-001.md) pela implementação real.
 - Servir o baseline ingênuo por `chief_complaint` (existe só para comparação/documentação do
   ADR-002, nunca foi pensado como algo a servir em produção)
 - Docker/deploy (EPIC 05) — este spec cobre só a aplicação FastAPI, não como ela é empacotada
@@ -134,6 +137,10 @@ Response `200`:
 - `uv run ruff check .` limpo, testes descritos abaixo passando
 
 ## Estratégia de testes
+
+*(Nota de atualização: `tests/test_api.py` tem hoje 10 testes (`pytest --collect-only`), não 6 —
+os 4 a mais foram adicionados na OBS-001, cobrindo `/metrics` e as métricas de negócio. Os 6
+descritos abaixo continuam corretos, só não são mais a lista completa.)*
 
 `tests/test_api.py`, marcadores `api` (todos) e `slow` (o teste de integração):
 

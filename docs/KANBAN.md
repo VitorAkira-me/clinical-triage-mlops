@@ -242,11 +242,10 @@ Status.
   container contra `25.0.1` no host que escreveu o parquet (`OSError: Repetition level
   histogram size mismatch` — corrigido fixando `pyarrow==25.0.1`).
 
-  **Risco identificado, não corrigido por prazo**: `scikit-learn==1.9.1` no container (sem
-  versão fixada) vs. `1.9.0` na API — `.joblib` carregou certo (`InconsistentVersionWarning`,
-  não erro), mas é drift de ambiente real entre quem treina e quem serve. Vira risco maior se
-  o próximo passo (ONNX/otimização) for sensível à versão exata do scikit-learn — vale fixar
-  as duas pontas na mesma versão antes de seguir.
+  **Risco identificado e corrigido na sessão seguinte** (antes do OPT-001, não ficou pendente):
+  `scikit-learn==1.9.1` no container (sem versão fixada) vs. `1.9.0` na API — drift de ambiente
+  real entre quem treina e quem serve. Fixado `scikit-learn==1.9.0` nos dois lugares, container
+  reconstruído, baseline retreinado via a DAG — `.joblib` resultante sem warning de versão.
 
 ### OPT-001 / BENCH-001 — Otimização de inferência (ONNX) + benchmark
 - **Objetivo**: aplicar uma técnica de otimização de latência (ONNX, citado como exemplo no
@@ -287,6 +286,12 @@ registrada na sessão de discovery.)*
 
 ## BACKLOG (nível de épico, não detalhado ainda)
 
+**Próximo obrigatório: EPIC 12.** É o `STEP 10` do [`docs/ROADMAP.md`](ROADMAP.md), a única etapa
+que falta antes de `STEP 11` (documentação final). Não é "backlog eventual" como os itens abaixo
+sem STEP associado — o ROADMAP já definia a *análise* (não o deploy) como obrigatória; a listagem
+plana abaixo não deixava isso claro até esta auditoria (achado registrado em
+[OBS-001](specs/OBS-001.md), seção "Interface — Passo 3").
+
 - EPIC 05 — Docker (DOCK-001 concluído; compose entregue na OBS-001)
 - EPIC 06 — Testes
 - EPIC 07 — CI/CD (GitHub Actions) (CI-001 concluído — cobre só o CI; o CD segue dependendo de
@@ -297,6 +302,7 @@ registrada na sessão de discovery.)*
   quantização/pruning fora de escopo)
 - EPIC 11 — Benchmark (latência p50/p95, tamanho de modelo) (BENCH-001 concluído — latência
   e tamanho sklearn vs. ONNX medidos)
-- EPIC 12 — Arquitetura de cloud (ADR-005)
-- EPIC 13 — Documentação final
+- **EPIC 12 — Arquitetura de cloud (ADR-005) — `STEP 10`, obrigatório (análise teórica: batch
+  vs. real-time, AWS vs. Azure vs. GCP; deploy real não é obrigatório, conforme o ROADMAP)**
+- EPIC 13 — Documentação final (`STEP 11` — depende do EPIC 12 estar fechado)
 - EPIC 14 — Vídeo STAR
