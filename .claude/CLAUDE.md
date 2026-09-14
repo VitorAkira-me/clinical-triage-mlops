@@ -74,12 +74,14 @@ speedup, reproduzido em 3 execuções. Tamanho: 9044 bytes (.joblib) vs.
 Antes disso, nesta mesma sessão: fixado `scikit-learn==1.9.0` na API e
 no container do Airflow (eliminava o drift de versão documentado no
 AIR-001) e retreinado o baseline sem o warning de versão.
-Next Recommended Action: próximo STEP a definir — candidatos: EPIC 06
-(testes, aprofundar cobertura), EPIC 12 (arquitetura de cloud, ADR-005)
-ou EPIC 13 (documentação final, ex: colar o resumo do OPT-001 no README
-seção 12, ainda TODO lá apesar de pronto em docs/specs/OPT-001.md).
-Seguir SPEC → discussão antes de implementar, como combinado desde a
-API-001.
+Next Recommended Action: EPIC 12 (arquitetura de cloud, ADR-005) é o
+próximo passo OBRIGATÓRIO, não opcional — é o STEP 10 do
+docs/ROADMAP.md, única etapa antes do STEP 11 (documentação final).
+Achado de auditoria (pré-README, nesta sessão): docs/KANBAN.md listava
+isso como item plano de backlog, sem sinalizar a obrigatoriedade que o
+ROADMAP já definia — corrigido. EPIC 06 (testes) continua opcional/nice-
+to-have, sem STEP associado no ROADMAP. Seguir SPEC → discussão antes de
+implementar, como combinado desde a API-001.
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como
