@@ -283,7 +283,9 @@ o número batendo com o tráfego gerado):
    se mostrou conservadora demais — a confiança real satura numa faixa de ~0,005 de largura perto
    de 1.0, não numa faixa genérica de "alta confiança"
 5. **Taxa de erro** — `http_requests_total` filtrando status diferente de `2xx`, por rota e
-   status agrupado
+   status agrupado. **"No data" é o estado normal** enquanto não houver erro real na janela de
+   tempo do painel — não é bug nem indício de configuração errada; confirmado gerando um erro de
+   propósito (`curl` numa rota inexistente) e vendo o painel passar a mostrar dado no ato
 
 Nenhuma das métricas de negócio (painéis 3 e 4) é uma detecção estatística formal de drift — são
 gatilhos pra investigação humana. Decisões completas em
