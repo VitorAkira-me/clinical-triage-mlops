@@ -1,6 +1,6 @@
 ---
 name: kanban
-description: Consulta e atualiza o Kanban do projeto (docs/KANBAN.md) — pegar tarefa, mover status, checklist pré-PR. Use ao iniciar uma tarefa, ao conferir o status de um card, ou antes de abrir qualquer PR.
+description: Consulta e atualiza o Kanban do projeto (docs/KANBAN.md) - pegar tarefa, mover status, checklist pré-PR. Use ao iniciar uma tarefa, ao conferir o status de um card, ou antes de abrir qualquer PR.
 ---
 
 # Kanban do projeto (docs/KANBAN.md)
@@ -10,14 +10,14 @@ próprio repositório (é o source of truth definido no CLAUDE.md, seção 6). C
 · IN PROGRESS · REVIEW/VALIDATION · DONE. IDs seguem o padrão `<PREFIXO>-<NNN>` (ex: `ML-002`,
 `API-001`) ou `EPIC-NN` para itens de backlog ainda não detalhados.
 
-Existe também um board no Notion, mantido sincronizado manualmente a partir daqui — o usuário
+Existe também um board no Notion, mantido sincronizado manualmente a partir daqui - o usuário
 atualiza o Notion olhando para `docs/KANBAN.md`, não o contrário. Por isso o campo **Resultado**
 de cada card fechado precisa estar sempre completo e preciso ao mover para DONE (não deixar para
 depois, não resumir demais): é a partir dele que o Notion é corrigido. Um card marcado como DONE
 sem trabalho de fato completo (ou sem Resultado preenchido) propaga o erro para o Notion na
 próxima sincronização.
 
-Projeto solo (ver CLAUDE.md seção 1) — não há campo de atribuição de pessoa nem necessidade de
+Projeto solo (ver CLAUDE.md seção 1) - não há campo de atribuição de pessoa nem necessidade de
 perguntar quem vai trabalhar em um card.
 
 ## Ações cobertas
@@ -31,7 +31,7 @@ perguntar quem vai trabalhar em um card.
   diff parecer tocar mais de um card, consultar `docs/KANBAN.md` para identificar candidatos a
   card relacionado em vez de assumir.
 - **Fechar uma tarefa**: mover o bloco do card para DONE e preencher o campo **Resultado** com o
-  que foi entregue (ver exemplo de `ML-001` no arquivo) — só depois que o checklist pré-PR abaixo
+  que foi entregue (ver exemplo de `ML-001` no arquivo) - só depois que o checklist pré-PR abaixo
   confirmar que o trabalho está 100% completo.
 
 ## Checklist obrigatório antes de qualquer PR
@@ -43,7 +43,7 @@ relacionados ao trabalho feito na branch atual:
 2. Para cada card candidato, avaliar se o trabalho da branch o resolve **por completo**.
 3. **Regra dura**: um card só pode ser movido para DONE e referenciado no PR se estiver 100%
    finalizado. Se um card está apenas parcialmente resolvido pelo diff atual, **não** movê-lo nem
-   incluí-lo como resolvido no PR — avisar o usuário explicitamente e instruir a concluir o card
+   incluí-lo como resolvido no PR - avisar o usuário explicitamente e instruir a concluir o card
    antes de abrir o PR (ou manter em IN PROGRESS e referenciar como "Part of" no PR).
 4. Só depois desse checklist, prosseguir para a skill `pr-description` com a lista de IDs
    confirmados como concluídos, e atualizar `docs/KANBAN.md` (mover para DONE, preencher

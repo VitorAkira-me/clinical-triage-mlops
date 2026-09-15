@@ -1,9 +1,9 @@
 """Gera um modelo placeholder para validar o build da imagem Docker (CI-001).
 
-NÃO é o baseline real — esse vem de notebooks/02_baseline.ipynb (ML-003) e é gitignored.
+NÃO é o baseline real - esse vem de notebooks/02_baseline.ipynb (ML-003) e é gitignored.
 Este script treina um Pipeline TF-IDF + LogisticRegression minúsculo sobre poucas linhas
 sintéticas (mesmas classes e formato de tests/test_api.py), só para o Dockerfile ter um
-`.joblib` válido no COPY — permitindo que o job de build (CI-001) e testes manuais locais
+`.joblib` válido no COPY - permitindo que o job de build (CI-001) e testes manuais locais
 validem a imagem inteira (build + subir container + /health + /predict) sem depender do
 notebook completo nem de um artefato versionado no Git.
 
@@ -11,7 +11,7 @@ Uso:
     uv run python scripts/gen_placeholder_model.py
     uv run python scripts/gen_placeholder_model.py --force  # sobrescreve mesmo se já existir
 
-Por padrão, RECUSA sobrescrever um .joblib já existente em models/ — depois da OBS-001 Passo 5,
+Por padrão, RECUSA sobrescrever um .joblib já existente em models/ - depois da OBS-001 Passo 5,
 esse caminho pode conter o baseline real (ML-003), e rodar este script sem querer sobre ele
 apagaria silenciosamente um artefato que levou minutos de treino real pra gerar de novo.
 """
@@ -52,7 +52,7 @@ def main() -> None:
 
     if OUTPUT_PATH.exists() and not args.force:
         logger.info(
-            "%s já existe — não sobrescrevendo (pode ser o baseline real da ML-003). "
+            "%s já existe - não sobrescrevendo (pode ser o baseline real da ML-003). "
             "Use --force se quiser mesmo gerar o placeholder no lugar dele.",
             OUTPUT_PATH,
         )

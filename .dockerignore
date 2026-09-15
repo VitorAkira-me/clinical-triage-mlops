@@ -20,7 +20,7 @@ build
 .coverage
 htmlcov
 
-# Secrets — .env tem HF_TOKEN, nunca vai para a imagem
+# Secrets - .env tem HF_TOKEN, nunca vai para a imagem
 .env
 .env.*
 

@@ -1,6 +1,6 @@
 name: CI
 
-# CI-001 — lint -> testes -> build. Cobre só a metade CI do pipeline CI/CD do
+# CI-001 - lint -> testes -> build. Cobre só a metade CI do pipeline CI/CD do
 # Tech Challenge; CD (publicar imagem, deploy) depende de registry/cloud (EPIC 12).
 # Spec: docs/specs/CI-001-ci-pipeline.md
 
@@ -57,7 +57,7 @@ jobs:
 
       - run: uv sync --frozen
 
-      # -m "not slow" exclui o teste de integração com o modelo real (API-001) — ele já se
+      # -m "not slow" exclui o teste de integração com o modelo real (API-001) - ele já se
       # auto-skipa em CI (o .joblib real é gitignored), mas o filtro deixa a intenção explícita.
       - name: pytest (com cobertura)
         run: uv run pytest -m "not slow" --cov --cov-fail-under=70
@@ -76,7 +76,7 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
 
       # O .joblib real (ML-003) é gitignored e não existe no runner. Gera um placeholder
-      # sintético só para o COPY do Dockerfile ter o que copiar — não valida acurácia,
+      # sintético só para o COPY do Dockerfile ter o que copiar - não valida acurácia,
       # só que a imagem builda e serve /health e /predict de ponta a ponta.
       - name: Gera modelo placeholder (DOCK-001 RF4)
         run: |

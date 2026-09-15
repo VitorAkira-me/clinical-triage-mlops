@@ -84,7 +84,7 @@ def test_metrics_excludes_health_checks(client: TestClient) -> None:
 
     body = client.get("/metrics").text
 
-    # /health é chamado a cada 30s pelo HEALTHCHECK do Docker (DOCK-001) — se aparecesse
+    # /health é chamado a cada 30s pelo HEALTHCHECK do Docker (DOCK-001) - se aparecesse
     # aqui, inflaria a métrica de "taxa de requisições" com heartbeat de infraestrutura
     # em vez de tráfego de negócio (OBS-001, ver spec, seção Riscos).
     assert '"/health"' not in body
@@ -102,7 +102,7 @@ def test_metrics_exposes_business_metrics_after_a_request(client: TestClient) ->
 def test_predict_increments_business_metrics_for_the_predicted_class(
     client: TestClient,
 ) -> None:
-    # Captura o "antes" das 3 classes possíveis — só depois da chamada sabemos qual classe
+    # Captura o "antes" das 3 classes possíveis - só depois da chamada sabemos qual classe
     # o modelo previu, então não dá para assumir de antemão qual contador vai mudar.
     before_counts = {
         classe: REGISTRY.get_sample_value("triage_predictions_total", {"classe_prevista": classe})
@@ -129,7 +129,7 @@ def test_predict_increments_business_metrics_for_the_predicted_class(
 
     for outra_classe in CLASSES:
         if outra_classe != urgencia:
-            # Uma série com label só nasce no primeiro .labels(...) observado — se a classe
+            # Uma série com label só nasce no primeiro .labels(...) observado - se a classe
             # nunca foi prevista nesta sessão de testes, get_sample_value devolve None, não
             # 0.0. Mesma normalização usada para capturar o "antes".
             count_outra = (
@@ -141,7 +141,7 @@ def test_predict_increments_business_metrics_for_the_predicted_class(
             assert count_outra == before_counts[outra_classe]
 
     # O histograma registrou exatamente a probabilidade que a API devolveu no corpo da
-    # resposta — não só "algum número", a confiança de verdade daquela predição.
+    # resposta - não só "algum número", a confiança de verdade daquela predição.
     soma_confianca_depois = REGISTRY.get_sample_value(
         "triage_prediction_confidence_sum", {"classe_prevista": urgencia}
     )
@@ -160,7 +160,7 @@ def test_startup_fails_with_clear_message_when_model_missing(
 def test_predict_with_real_baseline_model() -> None:
     if not DEFAULT_MODEL_PATH.exists():
         pytest.skip(
-            f"modelo real não encontrado em {DEFAULT_MODEL_PATH} — "
+            f"modelo real não encontrado em {DEFAULT_MODEL_PATH} - "
             "rode notebooks/02_baseline.ipynb antes deste teste"
         )
     with TestClient(app) as client:
