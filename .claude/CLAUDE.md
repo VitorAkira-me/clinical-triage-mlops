@@ -1,13 +1,13 @@
 # CLAUDE.md
 
 Contexto operacional permanente para trabalhar neste repositório. Não
-substitui o README — este arquivo é para o Claude (ou Claude Code), o
+substitui o README - este arquivo é para o Claude (ou Claude Code), o
 README é para humanos.
 
 ## 1. Contexto do projeto
 
-- Pós Tech em Machine Learning Engineering — FIAP
-- Tech Challenge — Fase 3: "Deploy de Modelo em Produção com Pipeline
+- Pós Tech em Machine Learning Engineering - FIAP
+- Tech Challenge - Fase 3: "Deploy de Modelo em Produção com Pipeline
   CI/CD, Monitoramento e Otimização de Latência"
 - Cenário: sistema de triagem automática de laudos médicos, classificando
   urgência em normal / atenção / urgente
@@ -25,7 +25,7 @@ cumprir checklist, blocos grandes de código sem explicação.
 
 ## 3. Papel do Claude
 
-Tech Lead, mentor, pair programmer, revisor, arquiteto — não gerador de
+Tech Lead, mentor, pair programmer, revisor, arquiteto - não gerador de
 código sozinho. Antes de mudanças relevantes: ler specs relacionadas,
 verificar o Kanban, verificar ADRs existentes, explicar a decisão,
 identificar impactos.
@@ -61,12 +61,12 @@ apontar a inconsistência e pedir decisão.
 ```
 Current Phase: STEP 10/11 concluídos → STEP 12 (vídeo)
 Current Step: ROADMAP completo, exceto o vídeo STAR
-Current Task: nenhuma tarefa aberta — só falta o vídeo
+Current Task: nenhuma tarefa aberta - só falta o vídeo
 Last Completed: passe final de documentação pré-vídeo, em duas rodadas.
 (1) Bug real achado testando o runbook do Airflow do zero: instruções
 eram só bash, apresentadas como funcionando em PowerShell (não
 funcionavam), e uma tentativa de simplificar o comando com data fixa
-quase criou um bug pior — Airflow reporta sucesso sem rodar task
+quase criou um bug pior - Airflow reporta sucesso sem rodar task
 nenhuma se a data for anterior ao start_date da DAG. Corrigido com
 scripts/run_airflow_dag.sh e .ps1, validados do zero nos dois shells.
 Também: painel "Taxa de erro" confirmado como não-bug (ausência real
@@ -76,18 +76,18 @@ do /predict (Field + json_schema_extra, validado via /openapi.json).
 (primeira pessoa, achados concretos na frente), 2 diagramas Mermaid
 (fluxo do projeto, CI/CD), header com badges reais/tabela de
 autor/requisitos/placeholder do vídeo, seção nova "como testar cada
-etapa" com comandos reais. Specs/ADRs auditados — já limpos, não
+etapa" com comandos reais. Specs/ADRs auditados - já limpos, não
 reescritos.
 Next Recommended Action: gravar o vídeo STAR e colar o link no README
 (placeholder "[ADICIONAR LINK]" já marcado). Nenhuma pendência de
 código ou documentação em aberto.
-Next Recommended Action: só falta o vídeo STAR (EPIC 14) — todo o
+Next Recommended Action: só falta o vídeo STAR (EPIC 14) - todo o
 roadmap de engenharia e documentação está concluído. Sem próxima tarefa
 de código pendente.
 ```
 
 (Esta seção deve ser atualizada a cada sessão; não usar o CLAUDE.md como
-log de atividades — histórico detalhado vive no Git e no KANBAN.)
+log de atividades - histórico detalhado vive no Git e no KANBAN.)
 
 ## 8. Padrões de código
 
@@ -122,5 +122,5 @@ sofisticada, por que estamos usando essa, como validar que funciona.
 ## 12. Experimentação
 
 Decisões viram hipóteses testáveis sempre que possível. Nunca inventar
-resultado de experimento ou benchmark — só registrar depois da execução
+resultado de experimento ou benchmark - só registrar depois da execução
 real.

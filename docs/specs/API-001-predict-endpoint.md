@@ -3,7 +3,7 @@
 ## Problema
 
 O modelo treinado na ML-003 (`models/tfidf_logreg_baseline.joblib`) existe hoje só como artefato
-de notebook — não há forma de consultá-lo fora de um script Python local. Para o projeto avançar
+de notebook - não há forma de consultá-lo fora de um script Python local. Para o projeto avançar
 para os STEPs seguintes (Docker, CI/CD, observabilidade), o modelo precisa estar servido atrás de
 uma API HTTP.
 
@@ -26,13 +26,13 @@ FastAPI mínima, com um endpoint de predição e um de health-check.
 - Autenticação/autorização
 - CORS
 - Versionamento de rota (`/predict` puro, sem prefixo `/api/v1`)
-- ~~Métricas Prometheus / instrumentação de observabilidade (EPIC 09)~~ — **adicionado depois,
+- ~~Métricas Prometheus / instrumentação de observabilidade (EPIC 09)~~ - **adicionado depois,
   na OBS-001** (`src/api/main.py` hoje expõe `/metrics`, RED + métricas de negócio). Fora de
-  escopo *aqui* no sentido de "este card não implementa", não "nunca vai existir" — ver
+  escopo *aqui* no sentido de "este card não implementa", não "nunca vai existir" - ver
   [docs/specs/OBS-001.md](OBS-001.md) pela implementação real.
 - Servir o baseline ingênuo por `chief_complaint` (existe só para comparação/documentação do
   ADR-002, nunca foi pensado como algo a servir em produção)
-- Docker/deploy (EPIC 05) — este spec cobre só a aplicação FastAPI, não como ela é empacotada
+- Docker/deploy (EPIC 05) - este spec cobre só a aplicação FastAPI, não como ela é empacotada
 - Batch prediction (múltiplos textos por request)
 
 ## Requisitos funcionais
@@ -50,11 +50,11 @@ FastAPI mínima, com um endpoint de predição e um de health-check.
 
 - Modelo carregado uma única vez no startup do processo (não recarregar por request)
 - Caminho do modelo configurável por variável de ambiente (`MODEL_PATH`), com default relativo à
-  raiz do projeto — não precisa mudar código para apontar para outro artefato (testes, ambientes
+  raiz do projeto - não precisa mudar código para apontar para outro artefato (testes, ambientes
   diferentes)
 - Código em `src/api/`: `main.py` (app + rotas) e `schemas.py` (modelos Pydantic de
   request/response); carregamento do modelo é uma função simples dentro de `main.py`, sem módulo
-  dedicado — não se justifica para uma função de poucas linhas
+  dedicado - não se justifica para uma função de poucas linhas
 - Type hints em todas as funções novas; sem abstrações (camada de serviço, repositório, etc.) que
   este escopo de 2 endpoints não pede
 
@@ -83,7 +83,7 @@ Response `422` (texto vazio/só espaços):
 ```json
 {"detail": [{"type": "value_error", "loc": ["body", "clinical_notes"], "msg": "..."}]}
 ```
-(formato padrão do FastAPI/Pydantic para erro de validação — não precisamos customizar)
+(formato padrão do FastAPI/Pydantic para erro de validação - não precisamos customizar)
 
 ### `GET /health`
 
@@ -97,7 +97,7 @@ Response `200`:
 - **Validação de `clinical_notes`**: `min_length=1` do Pydantic sozinho não barra string só de
   espaços. Usar um `field_validator` que faz `strip()` e rejeita se o resultado ficar vazio.
 - **Alinhamento de probabilidades**: `pipeline.predict_proba(...)` devolve as colunas na ordem de
-  `pipeline.classes_` (ordem alfabética do scikit-learn: `atencao`, `normal`, `urgente`) — **não**
+  `pipeline.classes_` (ordem alfabética do scikit-learn: `atencao`, `normal`, `urgente`) - **não**
   assumir a ordem `["normal", "atencao", "urgente"]` usada nos notebooks da ML-002/ML-003. Montar
   o dicionário de probabilidades fazendo `zip(pipeline.classes_, proba[0])`, nunca com uma lista
   de classes hardcoded separada do pipeline.
@@ -117,7 +117,7 @@ Response `200`:
 1. Startup do processo: `lifespan` carrega `MODEL_PATH` via `joblib.load`; se o arquivo não
    existir, levanta erro acionável e o processo não sobe
 2. Cliente envia `POST /predict` com `clinical_notes`
-3. Pydantic valida (não vazio após `strip()`) — falha aqui vira `422` automático, sem tocar o
+3. Pydantic valida (não vazio após `strip()`) - falha aqui vira `422` automático, sem tocar o
    modelo
 4. Handler chama `pipeline.predict([texto])` e `pipeline.predict_proba([texto])`
 5. Resposta monta `urgencia` (classe prevista) + `probabilidades` (dict alinhado via
@@ -131,14 +131,14 @@ Response `200`:
 - `POST /predict` com `clinical_notes` vazio ou só espaços devolve `422`
 - `GET /health` devolve `200` quando a aplicação está no ar
 - Subir a aplicação sem `models/tfidf_logreg_baseline.joblib` presente falha com mensagem citando
-  o comando/notebook para gerar o artefato — não um erro genérico de arquivo não encontrado
+  o comando/notebook para gerar o artefato - não um erro genérico de arquivo não encontrado
 - `MODEL_PATH` sobrescrito por variável de ambiente é respeitado (testável apontando para um
   modelo-fixture)
 - `uv run ruff check .` limpo, testes descritos abaixo passando
 
 ## Estratégia de testes
 
-*(Nota de atualização: `tests/test_api.py` tem hoje 10 testes (`pytest --collect-only`), não 6 —
+*(Nota de atualização: `tests/test_api.py` tem hoje 10 testes (`pytest --collect-only`), não 6 -
 os 4 a mais foram adicionados na OBS-001, cobrindo `/metrics` e as métricas de negócio. Os 6
 descritos abaixo continuam corretos, só não são mais a lista completa.)*
 
@@ -155,15 +155,15 @@ descritos abaixo continuam corretos, só não são mais a lista completa.)*
      mensagem cita o notebook)
 2. **Teste de integração** (`@pytest.mark.slow`, `api`): carrega o
    `models/tfidf_logreg_baseline.joblib` real e faz uma predição de verdade, checando só que a
-   resposta tem o formato esperado (não trava em números exatos — isso já está coberto pela
+   resposta tem o formato esperado (não trava em números exatos - isso já está coberto pela
    ML-003). Objetivo é pegar problemas reais de compatibilidade do artefato (versão do
    scikit-learn, schema de features) que a fixture sintética não pode detectar. Usa
-   `pytest.skip(...)` automático se o arquivo não existir — não quebra CI antes de existir um
+   `pytest.skip(...)` automático se o arquivo não existir - não quebra CI antes de existir um
    passo que gere o artefato.
 
 ## Métricas
 
-Não aplicável — este spec não introduz uma métrica de negócio nova, só serve o modelo cujas
+Não aplicável - este spec não introduz uma métrica de negócio nova, só serve o modelo cujas
 métricas já foram medidas e documentadas na ML-003
 (`docs/experiments/ML-003-baseline-metrics.json`).
 
@@ -171,19 +171,19 @@ métricas já foram medidas e documentadas na ML-003
 
 - `models/` é gitignored: um clone limpo do repositório não tem o `.joblib` até alguém rodar
   `notebooks/02_baseline.ipynb`. É o comportamento esperado (RF4 cobre isso com erro claro), mas
-  vale deixar registrado que "clonar e rodar" não funciona sem esse passo manual — Docker/deploy
+  vale deixar registrado que "clonar e rodar" não funciona sem esse passo manual - Docker/deploy
   (fora de escopo aqui) vai precisar decidir como o artefato chega à imagem
 - Ordem de `pipeline.classes_` divergente da ordem usada nos notebooks é uma fonte plausível de
-  bug silencioso (probabilidades trocadas entre classes sem erro nenhum) — mitigado pela regra
+  bug silencioso (probabilidades trocadas entre classes sem erro nenhum) - mitigado pela regra
   explícita na seção "Interface esperada", mas vale um teste específico que não deixe essa
   ambiguidade passar (checar que a probabilidade mais alta bate com a classe retornada em
   `urgencia`)
 
 ## Perguntas em aberto
 
-Nenhuma — decisões fechadas na discussão prévia a este documento.
+Nenhuma - decisões fechadas na discussão prévia a este documento.
 
 ## Experimentos
 
-Não aplicável — não há hipótese nova sendo testada aqui, é a implementação do que a ML-003 já
+Não aplicável - não há hipótese nova sendo testada aqui, é a implementação do que a ML-003 já
 validou.

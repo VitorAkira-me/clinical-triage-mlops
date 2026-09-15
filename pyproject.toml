@@ -11,7 +11,7 @@ classifiers = [
 [project]
 name = "clinical-triage-mlops"
 version = "0.1.0"
-description = "Triagem automática de laudos médicos por urgência — FIAP MLE Tech Challenge Fase 3"
+description = "Triagem automática de laudos médicos por urgência - FIAP MLE Tech Challenge Fase 3"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi",
@@ -22,7 +22,7 @@ dependencies = [
     "prometheus-fastapi-instrumentator>=8.1.0",
 ]
 
-# Dependências de notebook/EDA/treino — NÃO usadas pela API de inferência (src/api/).
+# Dependências de notebook/EDA/treino - NÃO usadas pela API de inferência (src/api/).
 # Ficam fora do runtime da imagem Docker (DOCK-001). Para rodar os notebooks:
 #   uv sync --extra data
 [project.optional-dependencies]
@@ -32,7 +32,7 @@ data = [
     "huggingface-hub>=1.27.0",
 ]
 
-# OPT-001/BENCH-001 — conversão ONNX + benchmark de latência. Não usado pela API em runtime
+# OPT-001/BENCH-001 - conversão ONNX + benchmark de latência. Não usado pela API em runtime
 # (a API continua servindo o pipeline sklearn original; ver docs/specs/OPT-001.md).
 benchmark = [
     "skl2onnx",

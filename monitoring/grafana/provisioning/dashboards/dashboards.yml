@@ -1,4 +1,4 @@
-# OBS-001, Passo 5 — provider apontando pra esta mesma pasta; o Grafana carrega
+# OBS-001, Passo 5 - provider apontando pra esta mesma pasta; o Grafana carrega
 # qualquer .json de dashboard que estiver aqui dentro, sem clique na UI.
 apiVersion: 1
 

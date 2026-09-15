@@ -1,7 +1,7 @@
-"""AIR-001 — DAG mínima: carrega o dataset fedmml-ed-triage e treina o baseline
+"""AIR-001 - DAG mínima: carrega o dataset fedmml-ed-triage e treina o baseline
 TF-IDF + LogisticRegression (mesma lógica da ML-003 / notebooks/02_baseline.ipynb).
 
-Sob demanda (schedule=None) — o requisito oficial não pede retreino agendado, só uma DAG
+Sob demanda (schedule=None) - o requisito oficial não pede retreino agendado, só uma DAG
 funcional que rode de ponta a ponta com sucesso. Ver docs/specs/AIR-001.md.
 """
 
@@ -39,7 +39,7 @@ def _remap_esi(esi: int) -> str:
 
 @dag(
     dag_id="air001_train_baseline",
-    description="AIR-001 — carrega fedmml-ed-triage e treina o baseline TF-IDF + LogReg (ML-003)",
+    description="AIR-001 - carrega fedmml-ed-triage e treina o baseline TF-IDF + LogReg (ML-003)",
     schedule=None,
     start_date=datetime(2026, 1, 1),
     catchup=False,
@@ -54,7 +54,7 @@ def air001_train_baseline() -> None:
         import pandas as pd
 
         if RAW_PARQUET.exists():
-            logger.info("%s já existe — reusando, sem baixar de novo.", RAW_PARQUET)
+            logger.info("%s já existe - reusando, sem baixar de novo.", RAW_PARQUET)
             return str(RAW_PARQUET)
 
         from huggingface_hub import hf_hub_download
@@ -68,7 +68,7 @@ def air001_train_baseline() -> None:
             )
             logger.info("CSV resolvido do cache local do Hugging Face (sem rede).")
         except Exception:
-            logger.info("Sem cache local do dataset — baixando com HF_TOKEN do .env.")
+            logger.info("Sem cache local do dataset - baixando com HF_TOKEN do .env.")
             from dotenv import load_dotenv
             from huggingface_hub import login
 
@@ -76,7 +76,7 @@ def air001_train_baseline() -> None:
             token = os.environ.get("HF_TOKEN")
             if not token:
                 raise RuntimeError(
-                    "Dataset não está em cache local e HF_TOKEN não encontrado em .env — "
+                    "Dataset não está em cache local e HF_TOKEN não encontrado em .env - "
                     "sem como baixar o fedmml-ed-triage (repositório gated)."
                 )
             login(token=token)

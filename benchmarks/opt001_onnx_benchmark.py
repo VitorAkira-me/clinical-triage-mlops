@@ -1,4 +1,4 @@
-"""OPT-001/BENCH-001 — converte o baseline (ML-003) para ONNX e compara com o
+"""OPT-001/BENCH-001 - converte o baseline (ML-003) para ONNX e compara com o
 original sklearn: corretude primeiro, depois latência. Números reais, não estimados.
 
 Uso:
@@ -102,11 +102,11 @@ def check_correctness(pipeline, predict_onnx_fn, texts: list[str], classes: list
 
     # onnxruntime devolve proba como lista de dicts {classe: prob} quando zipmap=False só se
     # a saída já vier como tensor; alinhamos por pipeline.classes_ explicitamente, nunca por
-    # posição assumida — mesmo cuidado do gotcha já documentado na API-001.
+    # posição assumida - mesmo cuidado do gotcha já documentado na API-001.
     if isinstance(onnx_proba_raw, np.ndarray) and onnx_proba_raw.dtype != object:
         onnx_proba = onnx_proba_raw
     else:
-        # veio como array de dicts (zipmap) — remonta na ordem de `classes`
+        # veio como array de dicts (zipmap) - remonta na ordem de `classes`
         onnx_proba = np.array([[d[c] for c in classes] for d in onnx_proba_raw])
 
     labels_match = sum(a == b for a, b in zip(sk_labels, onnx_labels, strict=True))
@@ -176,7 +176,7 @@ def main() -> None:
 
         else:
             logger.warning(
-                "Pipeline inteiro converteu mas NÃO bateu corretude — descartando, indo pro fallback."
+                "Pipeline inteiro converteu mas NÃO bateu corretude - descartando, indo pro fallback."
             )
             full_onnx_bytes = None
 
@@ -195,7 +195,7 @@ def main() -> None:
             correctness["labels_match_pct"] == 1.0 and correctness["probabilities_close_atol_1e-4"]
         ):
             raise RuntimeError(
-                f"Fallback também não bateu corretude: {correctness} — não seguir pra latência "
+                f"Fallback também não bateu corretude: {correctness} - não seguir pra latência "
                 "com um resultado errado."
             )
         result["approach"] = "classifier_only"

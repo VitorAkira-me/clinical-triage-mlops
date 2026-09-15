@@ -16,7 +16,7 @@ from src.api.schemas import HealthResponse, PredictRequest, PredictResponse
 # (o menor é 0.01s = 10ms) jogariam quase toda requisição no mesmo bucket, sem
 # resolução para calcular p95 de verdade (OBS-001, RNF5). Usados nos dois histogramas
 # de `metrics.default()`: o "highr" (sem label de rota, mais preciso) e o "lowr" (tem
-# o label `handler`, é o que permite p95 por rota — por padrão vem com só 3 buckets
+# o label `handler`, é o que permite p95 por rota - por padrão vem com só 3 buckets
 # grosseiros, 0.1/0.5/1s, inúteis pra latência na casa de milissegundos).
 LATENCY_BUCKETS_SECONDS = (
     0.0005,
@@ -65,7 +65,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(title="Clinical Triage API", lifespan=lifespan)
 
-# Métricas RED (Rate, Errors, Duration) automáticas — OBS-001, Passo 1.
+# Métricas RED (Rate, Errors, Duration) automáticas - OBS-001, Passo 1.
 # `/health` e `/metrics` ficam fora: o HEALTHCHECK do Docker bate em /health a cada 30s
 # indefinidamente e inflaria a métrica de "taxa de requisições" com heartbeat de
 # infraestrutura, não tráfego de negócio (ver docs/specs/OBS-001.md, seção Riscos).
@@ -78,7 +78,7 @@ instrumentator.add(
 )
 instrumentator.instrument(app).expose(app, endpoint="/metrics")
 
-# Métricas de negócio — OBS-001, Passo 2. Via prometheus_client direto (não pelo
+# Métricas de negócio - OBS-001, Passo 2. Via prometheus_client direto (não pelo
 # instrumentator, que é especializado em métricas HTTP genéricas). Funcionam como proxy
 # de drift: não há rótulo verdadeiro disponível em produção, então a distribuição de
 # classes previstas e a confiança do modelo são os sinais indiretos que temos.
@@ -90,11 +90,11 @@ PREDICTIONS_TOTAL = Counter(
 
 # RECALIBRADO na OBS-001 Passo 5 contra o baseline REAL (não mais hipótese): 90 chamadas
 # reais a /predict, textos amostrados do dataset de verdade (30 por classe), confirmaram
-# separação perfeita (100% de acerto, como a ML-003/ADR-002 já documentavam) — mas a
+# separação perfeita (100% de acerto, como a ML-003/ADR-002 já documentavam) - mas a
 # confiança ficou muito mais colada em 1.0 do que a hipótese original previa: toda a
 # massa caiu entre 0.9949 e 0.9997 (largura ~0.005!), não "alta confiança" em sentido
 # genérico. Os buckets antigos (0.9, 0.95, 0.98, 0.99, 0.995, 0.999, 1.0) jogariam
-# praticamente tudo nos 2 últimos buckets — mesmo problema de saturação já visto na
+# praticamente tudo nos 2 últimos buckets - mesmo problema de saturação já visto na
 # calibração de latência do Passo 1, só que mais extremo aqui. Faixa baixa (0.34 a 0.9)
 # mantida por segurança (nunca observada na prática, mas matematicamente possível se
 # um texto não bater com nenhum padrão do template); resolução real concentrada em

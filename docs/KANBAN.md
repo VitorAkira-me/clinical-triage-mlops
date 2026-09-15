@@ -1,4 +1,4 @@
-# KANBAN — Clinical Triage MLOps (Fase 3)
+# KANBAN - Clinical Triage MLOps (Fase 3)
 
 Colunas: BACKLOG · TODO · IN PROGRESS · REVIEW/VALIDATION · DONE
 
@@ -10,7 +10,7 @@ Status.
 
 ## DONE
 
-### ML-001 — Investigar e escolher dataset
+### ML-001 - Investigar e escolher dataset
 - **Objetivo**: encontrar dataset de texto médico adequado para
   classificação de urgência (normal/atenção/urgente), ≥2.000 registros
 - **Motivação**: todo o resto do projeto depende dessa decisão
@@ -19,10 +19,10 @@ Status.
 - **Critério de aceite**: dataset escolhido e decisão documentada
 - **Dependências**: nenhuma
 - **Complexidade**: média
-- **Resultado**: fedmml-ed-triage escolhido — ver
+- **Resultado**: fedmml-ed-triage escolhido - ver
   [ADR-001](decisions/ADR-001-dataset.md)
 
-### ML-002 — EDA do dataset escolhido
+### ML-002 - EDA do dataset escolhido
 - **Objetivo**: entender completude, distribuição de classes (após
   remapeamento ESI→3 classes) e qualidade textual do campo `clinical_notes`
 - **Motivação**: validar que o dataset sintético não trivializa o
@@ -41,17 +41,17 @@ Status.
 - **Complexidade**: média
 - **Resultado**: notebook `notebooks/01_eda_dataset.ipynb`. Distribuição de
   classes moderadamente desbalanceada (atenção 47,4% / normal 32,2% /
-  urgente 20,3%) — decisão: `class_weight="balanced"`, sem
+  urgente 20,3%) - decisão: `class_weight="balanced"`, sem
   under/oversampling, avaliação por F1 macro + recall de `urgente`.
   Achado principal: `clinical_notes` tem vazamento determinístico total
   (chief_complaint e cláusula final do template mapeiam 1:1 para a classe,
-  0 exceções em 85.679 notas) — qualquer classificador de texto vai bater
+  0 exceções em 85.679 notas) - qualquer classificador de texto vai bater
   ~100%. Vitais/labs, fora de escopo, validados como gerados com ruído
   real (não determinísticos), confirmando que o vazamento é específico do
   texto. Decisão de manter o dataset e reportar com transparência
   documentada em [ADR-002](decisions/ADR-002-text-leakage.md).
 
-### ML-003 — Baseline de classificação (TF-IDF + Logistic Regression)
+### ML-003 - Baseline de classificação (TF-IDF + Logistic Regression)
 - **Objetivo**: treinar e avaliar um baseline de classificação de urgência
   a partir de `clinical_notes`, estabelecendo o piso de referência para
   qualquer modelo futuro
@@ -79,13 +79,13 @@ Status.
   [docs/experiments/ML-003-baseline-metrics.json](../docs/experiments/ML-003-baseline-metrics.json).
   Confirmação empírica do ADR-002: os dois baselines (TF-IDF+LogReg e
   ingênuo por `chief_complaint`) batem exatamente F1 macro = recall macro
-  = recall(`urgente`) = 1.00 sobre 17.136 exemplos de teste — matrizes de
+  = recall(`urgente`) = 1.00 sobre 17.136 exemplos de teste - matrizes de
   confusão idênticas, diagonais perfeitas. Não há distinção prática entre
   os dois modelos: o texto não carrega sinal além do que `chief_complaint`
   já entrega. README (tarefa separada) vai documentar isso na subseção
   6.1 "Limitações do dataset".
 
-### API-001 — Especificar e implementar endpoint `/predict`
+### API-001 - Especificar e implementar endpoint `/predict`
 - **Objetivo**: expor o pipeline TF-IDF + LogisticRegression da ML-003 via API FastAPI
   (`POST /predict` + `GET /health`)
 - **Dependências**: ML-003
@@ -94,7 +94,7 @@ Status.
   [docs/specs/API-001-predict-endpoint.md](../docs/specs/API-001-predict-endpoint.md);
   implementação em `src/api/main.py` + `src/api/schemas.py`. `POST /predict` recebe só
   `clinical_notes`, devolve `urgencia` + `probabilidades` (dict nomeado por classe, montado via
-  `pipeline.classes_` — não uma lista posicional, evita o gotcha de `predict_proba` ordenar
+  `pipeline.classes_` - não uma lista posicional, evita o gotcha de `predict_proba` ordenar
   alfabeticamente). Modelo carregado uma vez no startup (`lifespan`); ausência de
   `models/tfidf_logreg_baseline.joblib` falha o startup com mensagem citando
   `notebooks/02_baseline.ipynb`. `MODEL_PATH` configurável por variável de ambiente. 6 testes em
@@ -102,25 +102,25 @@ Status.
   passando; testado manualmente também via `uvicorn` real (não só `TestClient`). Fora de escopo:
   auth, CORS, versionamento de rota, métricas Prometheus (EPIC 09).
 
-### DOC-001 — README seção 6 (Modelo) + 6.1 (Limitações do dataset)
+### DOC-001 - README seção 6 (Modelo) + 6.1 (Limitações do dataset)
 - **Objetivo**: documentar o baseline da ML-003 no README, incluindo a tabela comparativa
   TF-IDF vs. baseline ingênuo que evidencia o vazamento do ADR-002
 - **Motivação**: números prontos desde a ML-003, pendência de redação registrada em duas
   sessões anteriores (ML-003 e API-001)
 - **Dependências**: ML-003
-- **Complexidade**: baixa (só redação — nenhuma decisão de código pendente)
+- **Complexidade**: baixa (só redação - nenhuma decisão de código pendente)
 - **Resultado**: README.md seções 6 e 6.1 preenchidas. Números conferidos contra
   [docs/experiments/ML-003-baseline-metrics.json](../docs/experiments/ML-003-baseline-metrics.json)
   (batem exatos). Tabela comparativa TF-IDF vs. ingênuo por `chief_complaint`, com nota sobre
   vitais/labs validados como não-determinísticos (ML-002) e link para
   [ADR-002](decisions/ADR-002-text-leakage.md). Docker/CI/demais seções TODO do README
-  continuam fora de escopo — são decisões de arquitetura, não redação, e seguem o fluxo
+  continuam fora de escopo - são decisões de arquitetura, não redação, e seguem o fluxo
   SPEC → discussão.
 
-### DOCK-001 — Dockerizar a API de inferência (`src/api/`)
+### DOCK-001 - Dockerizar a API de inferência (`src/api/`)
 - **Objetivo**: empacotar a API FastAPI da API-001 numa imagem Docker autossuficiente que sobe
   com `docker run` e responde em `/health` e `/predict`, sem volume, rede ou secret
-- **Motivação**: pré-requisito para CI/CD (EPIC 07) e arquitetura de cloud (EPIC 12) — a partir
+- **Motivação**: pré-requisito para CI/CD (EPIC 07) e arquitetura de cloud (EPIC 12) - a partir
   daqui a unidade deployável do projeto é a imagem, não o checkout do repo
 - **Dependências**: API-001
 - **Complexidade**: média
@@ -130,8 +130,8 @@ Status.
   a partir do `uv.lock`; código roda via `PYTHONPATH=/app` (não instala o pacote `src`), usuário
   não-root, `HEALTHCHECK` batendo em `GET /health` via `urllib` (sem curl na slim). Modelo entra
   por `COPY` explícito do `.joblib` no build (decisão: imagem autossuficiente; revisitar quando
-  houver model registry — EPIC 08/12). Commit `chore:` separado moveu `pandas`/`pyarrow`/
-  `huggingface-hub` para `[project.optional-dependencies] data` — fora do runtime da imagem,
+  houver model registry - EPIC 08/12). Commit `chore:` separado moveu `pandas`/`pyarrow`/
+  `huggingface-hub` para `[project.optional-dependencies] data` - fora do runtime da imagem,
   ainda instaláveis via `uv sync --extra data` para os notebooks. **Tamanho da imagem final:
   132 MB** (`docker image inspect` / `CONTENT SIZE`, compactado; ~568 MB descompactado). Chegou
   a 308 MB na 1ª versão e caiu com: remover `chown -R` (layer duplicada de ~296 MB), montar o
@@ -142,26 +142,26 @@ Status.
   no `COPY` (exit 1), não em runtime. `docker-compose.yml` fora de escopo (só faz sentido no
   EPIC 09, com Prometheus + Grafana).
 
-### CI-001 — Pipeline CI (GitHub Actions): lint → testes → build
+### CI-001 - Pipeline CI (GitHub Actions): lint → testes → build
 - **Objetivo**: automatizar lint (ruff), testes (pytest) e validação de build da imagem Docker a
   cada PR/push para `main`, com o pipeline realmente bloqueando merge quando falha
 - **Motivação**: nada garante hoje que um PR não quebrou lint/teste/build antes de chegar em
-  `main`; requisito do Tech Challenge Fase 3 (pipeline CI/CD) — este card cobre a metade CI
+  `main`; requisito do Tech Challenge Fase 3 (pipeline CI/CD) - este card cobre a metade CI
 - **Dependências**: DOCK-001
 - **Complexidade**: média
 - **Resultado**: spec em [docs/specs/CI-001-ci-pipeline.md](specs/CI-001-ci-pipeline.md).
   `.github/workflows/ci.yml` com 3 jobs: `lint` (`ruff check` + `ruff format --check`) e `test`
   (`pytest -m "not slow" --cov --cov-fail-under=70`) em paralelo, `build` com
-  `needs: [lint, test]` — builda a imagem do DOCK-001, sobe o container e valida `GET /health` +
+  `needs: [lint, test]` - builda a imagem do DOCK-001, sobe o container e valida `GET /health` +
   `POST /predict` reais dentro do job. `scripts/gen_placeholder_model.py` gera um modelo
   sintético só para o `COPY` do Dockerfile (o `.joblib` real é gitignored, não existe no
-  runner) — reutilizável localmente, não versionado. Cache de deps via `astral-sh/setup-uv`
+  runner) - reutilizável localmente, não versionado. Cache de deps via `astral-sh/setup-uv`
   (`uv`/Python fixados em `0.11.7`/`3.12`, chaveado por `uv.lock`); `concurrency` cancela runs
   supersedidos.
 
   **Validado de verdade no PR #6**, não assumido: run inicial 100% verde (lint 9s, test 52s,
   build 37s, confirmando que `build` só inicia depois de `lint`+`test`). Commit proposital com
-  `import sys` não usado → `lint` vermelho (`F401`), `build` **SKIPPED** — mas nesse momento,
+  `import sys` não usado → `lint` vermelho (`F401`), `build` **SKIPPED** - mas nesse momento,
   **sem branch protection ainda**, o PR seguia `mergeable: MERGEABLE` (prova de que até então o
   CI era só sinal, não bloqueio). Configurada branch protection em `main` via `gh api`
   (`required_status_checks` com `lint`/`test`/`build`, preservando as regras já existentes de
@@ -171,7 +171,7 @@ Status.
   vermelho→bloqueado→verde→liberado, com saída real de `gh run watch`/`gh pr view`/`gh pr merge`
   em cada etapa (sem número ou resultado inventado).
 
-### OBS-001 — Observabilidade da API (Prometheus + Grafana)
+### OBS-001 - Observabilidade da API (Prometheus + Grafana)
 - **Objetivo**: instrumentar a API com métricas Prometheus (RED + negócio) e um dashboard
   Grafana, funcionando como proxy de drift já que não há rótulo verdadeiro em produção
 - **Motivação**: EPIC 09 do roadmap; a API rodava sem nenhuma visibilidade operacional
@@ -180,31 +180,31 @@ Status.
 - **Resultado**: spec em [docs/specs/OBS-001.md](specs/OBS-001.md), 5 passos, todos implementados
   e validados de verdade (nenhum número inventado):
 
-  **Passo 1** — `prometheus-fastapi-instrumentator` para RED automático. Achado real: `.instrument(app)`
+  **Passo 1** - `prometheus-fastapi-instrumentator` para RED automático. Achado real: `.instrument(app)`
   sozinho não grava métrica nenhuma, precisa de `.add(metrics.default(...))`. `/health`/`/metrics`
   excluídos (heartbeat do Docker não é tráfego de negócio). Buckets de latência recalibrados
-  (0.5ms–10s) — o padrão da lib (mínimo 10ms) daria zero resolução pra um modelo linear leve.
+  (0.5ms–10s) - o padrão da lib (mínimo 10ms) daria zero resolução pra um modelo linear leve.
 
-  **Passo 2** — métricas de negócio via `prometheus_client` direto: `triage_predictions_total`
+  **Passo 2** - métricas de negócio via `prometheus_client` direto: `triage_predictions_total`
   (Counter) e `triage_prediction_confidence` (Histogram), ambas com label `classe_prevista` (não
-  agregado global — mais diagnóstico, cardinalidade trivial).
+  agregado global - mais diagnóstico, cardinalidade trivial).
 
-  **Passo 3** — `docker-compose.yml`: API via `build: .` (sem registry), Prometheus/Grafana com
+  **Passo 3** - `docker-compose.yml`: API via `build: .` (sem registry), Prometheus/Grafana com
   `depends_on: condition: service_healthy` reaproveitando o `HEALTHCHECK` da DOCK-001, sem volume
   persistente (efêmero é suficiente pro objetivo de demonstração).
 
-  **Passo 4** — `prometheus.yml` real: scrape em `api:8000` (nome do serviço, não `localhost`).
+  **Passo 4** - `prometheus.yml` real: scrape em `api:8000` (nome do serviço, não `localhost`).
   Validado com número batendo exato: 3 chamadas reais → `triage_predictions_total` no Prometheus
   mostrou exatamente a mesma contagem.
 
-  **Passo 5** — provisionamento do Grafana por arquivo (datasource + dashboard, 4 painéis: taxa
+  **Passo 5** - provisionamento do Grafana por arquivo (datasource + dashboard, 4 painéis: taxa
   de requisições, latência p95, distribuição de classes, confiança p50/p95 por classe). Antes de
   implementar, **verificação**: não existe nem nunca existiu `.joblib` versionado no repo
-  (gitignored por design) — rodados de verdade `notebooks/01_eda_dataset.ipynb` (dataset real,
+  (gitignored por design) - rodados de verdade `notebooks/01_eda_dataset.ipynb` (dataset real,
   87.234 linhas, mesmo vazamento do ADR-002 confirmado com dado real) e `02_baseline.ipynb`
   (resultado idêntico, byte a byte, ao `docs/experiments/ML-003-baseline-metrics.json` já
   commitado). **Achado principal do passo**: a hipótese de calibração de confiança do Passo 2
-  era direcionalmente certa mas conservadora demais — a distribuição real do baseline satura
+  era direcionalmente certa mas conservadora demais - a distribuição real do baseline satura
   numa faixa de ~0,005 de largura (`0.9949`–`0.9997`), não numa faixa genérica de "alta
   confiança"; buckets recalibrados contra 90 chamadas reais (dataset de verdade, 30 por classe),
   `histogram_quantile` foi de `NaN` para valores reais e coerentes (`p50≈0.9994`, `p95≈0.9997`).
@@ -216,9 +216,9 @@ Status.
   Fora de escopo mantido: Alertmanager, detecção estatística formal de drift (o card entrega um
   proxy visual, não um teste estatístico), autenticação do `/metrics`/Grafana, tracing.
 
-### AIR-001 — DAG de treino do baseline (Airflow)
+### AIR-001 - DAG de treino do baseline (Airflow)
 - **Objetivo**: DAG funcional com 2 tasks (carregar dataset → treinar e salvar o baseline
-  TF-IDF + LogisticRegression da ML-003), rodando de ponta a ponta com sucesso — requisito
+  TF-IDF + LogisticRegression da ML-003), rodando de ponta a ponta com sucesso - requisito
   oficial do Tech Challenge (15% da nota), mais simples que o roadmap original (sem retreino
   agendado nem sensores)
 - **Motivação**: orquestração via Airflow é requisito explícito do enunciado
@@ -227,7 +227,7 @@ Status.
 - **Resultado**: spec em [docs/specs/AIR-001.md](specs/AIR-001.md). DAG
   `air001_train_baseline` (`airflow/dags/air001_train_baseline.py`, TaskFlow API,
   `load_dataset() -> train_baseline()`), container Docker standalone (`airflow/Dockerfile`,
-  `apache/airflow:2.10.5-python3.12` — testado empiricamente que Airflow nativo no Windows
+  `apache/airflow:2.10.5-python3.12` - testado empiricamente que Airflow nativo no Windows
   quebra, `ImportError` em `DagBag` já na importação básica) separado do
   `docker-compose.yml` do OBS-001 (menor blast radius). `load_dataset` reusa
   `data/raw/fedmml_ed_triage_raw.parquet` já existente (gerado na OBS-001 Passo 5), sem rede
@@ -235,53 +235,53 @@ Status.
 
   **Validado de verdade** via `airflow dags test air001_train_baseline 2026-09-14`: as 2 tasks
   `SUCCESS`, `DagRun ... state=success`; `models/tfidf_logreg_baseline.joblib` confirmado no
-  host (9044 bytes, volume montado — não preso no container), carregado e validado como
+  host (9044 bytes, volume montado - não preso no container), carregado e validado como
   `sklearn.pipeline.Pipeline` com `classes_ = ['atencao', 'normal', 'urgente']`. Dois problemas
   reais encontrados e corrigidos na validação: Git-Bash traduzindo `/opt/airflow` pra caminho
   Windows (`MSYS_NO_PATHCONV=1`) e `pyarrow` sem versão fixada resolvendo pra `19.0.0` no
   container contra `25.0.1` no host que escreveu o parquet (`OSError: Repetition level
-  histogram size mismatch` — corrigido fixando `pyarrow==25.0.1`).
+  histogram size mismatch` - corrigido fixando `pyarrow==25.0.1`).
 
   **Risco identificado e corrigido na sessão seguinte** (antes do OPT-001, não ficou pendente):
-  `scikit-learn==1.9.1` no container (sem versão fixada) vs. `1.9.0` na API — drift de ambiente
+  `scikit-learn==1.9.1` no container (sem versão fixada) vs. `1.9.0` na API - drift de ambiente
   real entre quem treina e quem serve. Fixado `scikit-learn==1.9.0` nos dois lugares, container
-  reconstruído, baseline retreinado via a DAG — `.joblib` resultante sem warning de versão.
+  reconstruído, baseline retreinado via a DAG - `.joblib` resultante sem warning de versão.
 
   **Re-validação pré-vídeo (achado real, não hipotético)**: usuário seguiu as instruções e não
   conseguiu subir o ambiente. Causa raiz: o comando documentado era só bash, apresentado como
-  "irrelevante em PowerShell" — falso, colar o bloco literal no PowerShell quebra completamente
+  "irrelevante em PowerShell" - falso, colar o bloco literal no PowerShell quebra completamente
   (`\` não é continuação de linha lá; `$(date +%F)` não existe). Achado mais sério, pego só
   porque a correção passou a checar o resultado (não só o exit code): uma data de execução
   anterior ao `start_date` da DAG (2026-01-01) faz o Airflow reportar `state=success` **sem
-  rodar nenhuma task**, silenciosamente — quase reintroduzido pela própria tentativa de corrigir
+  rodar nenhuma task**, silenciosamente - quase reintroduzido pela própria tentativa de corrigir
   o bug de plataforma com uma data fixa arbitrária (`2024-01-01`, anterior ao `start_date`).
   Corrigido com dois scripts (`scripts/run_airflow_dag.sh` e `.ps1`, sintaxe nativa de cada
   shell, data sempre "hoje", confirmação de que o `.joblib` foi *atualizado* pela execução, não
-  só que existe) — validados do zero, sem modelo presente, nos dois shells. Detalhes completos
+  só que existe) - validados do zero, sem modelo presente, nos dois shells. Detalhes completos
   em [docs/specs/AIR-001.md](specs/AIR-001.md), seção "Re-validação pré-vídeo".
 
   **Scripts de demonstração visual pro vídeo** (`scripts/run_airflow_ui.sh`/`.ps1`, separados dos
   scripts de teste acima, que continuam intocados): sobem `airflow standalone` (UI completa,
   porta 8080) com a mesma imagem/volumes. Validado nos dois shells, ~18s pra subir,
   `/health`/`/login/` reais respondendo 200, DAG listada. Senha do `admin` fica em
-  `/opt/airflow/standalone_admin_password.txt` dentro do container — checado rodando de
+  `/opt/airflow/standalone_admin_password.txt` dentro do container - checado rodando de
   verdade, não assumido; o banner de senha no log (citado como possível no pedido) **não
   apareceu** mesmo com o webserver já respondendo tráfego real.
 
-### OPT-001 / BENCH-001 — Otimização de inferência (ONNX) + benchmark
+### OPT-001 / BENCH-001 - Otimização de inferência (ONNX) + benchmark
 - **Objetivo**: aplicar uma técnica de otimização de latência (ONNX, citado como exemplo no
-  enunciado oficial) e comparar com o original — corretude primeiro, latência depois
+  enunciado oficial) e comparar com o original - corretude primeiro, latência depois
 - **Motivação**: requisito oficial do Tech Challenge, 20% da nota (maior peso restante)
 - **Dependências**: ML-003 (usa `models/tfidf_logreg_baseline.joblib`)
 - **Complexidade**: média
 - **Resultado**: spec em [docs/specs/OPT-001.md](specs/OPT-001.md),
   `benchmarks/opt001_onnx_benchmark.py`. **Pipeline inteiro** (TfidfVectorizer +
-  LogisticRegression) convertido pra ONNX via `skl2onnx` funcionou de primeira — não precisou
+  LogisticRegression) convertido pra ONNX via `skl2onnx` funcionou de primeira - não precisou
   do fallback de classificador isolado (implementado e disponível no script, mas não
   acionado). Corretude validada em 150 textos reais do dataset antes de medir latência: 150/150
   classes batendo, diferença máxima de probabilidade `8.11e-08` (tolerância `1e-4`). Latência
   real (300 iterações, mesma entrada, mesma máquina, após warmup):
-  sklearn mediana 0.40ms/p95 0.55ms vs. ONNX mediana 0.036ms/p95 0.050ms — **~11x de speedup**
+  sklearn mediana 0.40ms/p95 0.55ms vs. ONNX mediana 0.036ms/p95 0.050ms - **~11x de speedup**
   (consistente em 3 execuções independentes). Tamanho do artefato: 9.044 bytes (`.joblib`) vs.
   7.076 bytes (`.onnx`), -22%. Resultado completo em
   [docs/experiments/OPT-001-benchmark.json](../docs/experiments/OPT-001-benchmark.json); resumo
@@ -289,24 +289,24 @@ Status.
   servir via ONNX em produção (isto é comparação/benchmark, não mudança na API);
   quantização/pruning.
 
-### ARCH-001 — Decisão de arquitetura de nuvem (análise, sem implementação)
-- **Objetivo**: análise textual exigida pelo Tech Challenge — batch vs. real-time e qual provedor
+### ARCH-001 - Decisão de arquitetura de nuvem (análise, sem implementação)
+- **Objetivo**: análise textual exigida pelo Tech Challenge - batch vs. real-time e qual provedor
   (AWS/Azure/GCP), sem deploy real
 - **Motivação**: `STEP 10` do `docs/ROADMAP.md`, única etapa obrigatória antes do `STEP 11`
-  (documentação final) — achado da auditoria pré-README: estava registrado como item plano de
+  (documentação final) - achado da auditoria pré-README: estava registrado como item plano de
   BACKLOG, sem essa sinalização de obrigatoriedade
 - **Dependências**: nenhuma (análise, não depende de código)
 - **Complexidade**: baixa (redação, decisão já discutida)
-- **Resultado**: [ADR-005](decisions/ADR-005-cloud-strategy.md). Real-time (não batch) pra API —
+- **Resultado**: [ADR-005](decisions/ADR-005-cloud-strategy.md). Real-time (não batch) pra API -
   constatação do que já foi construído (API síncrona desde a API-001, latência medida na
   OBS-001/OPT-001), não escolha nova; treino via Airflow já é batch por natureza. Provedor
-  recomendado: AWS (ECS Fargate + Amazon Managed Prometheus + Amazon Managed Grafana + MWAA) —
+  recomendado: AWS (ECS Fargate + Amazon Managed Prometheus + Amazon Managed Grafana + MWAA) -
   critério: menor distância entre o que já existe localmente (Docker + Prometheus + Grafana +
   Airflow) e o equivalente gerenciado, não lock-in prévio. GCP Cloud Run registrado como
   alternativa honesta se custo/simplicidade pesar mais que continuidade da stack de
   observabilidade. Resumo no README seção 2.
 
-### DOC-002 — README final (Documentação)
+### DOC-002 - README final (Documentação)
 - **Objetivo**: consolidar o README com visão geral, decisão de arquitetura de nuvem, como
   executar (validado de verdade), resultados, monitoramento e limitações/lições aprendidas
 - **Motivação**: critério de Documentação do Tech Challenge (15% da nota); última frente antes
@@ -315,11 +315,11 @@ Status.
 - **Complexidade**: média
 - **Resultado**: `README.md` reestruturado (11 seções). Antes de escrever, auditoria dedicada de
   `docs/specs/*.md`/`docs/decisions/*.md`/KANBAN/CLAUDE.md contra o que foi de fato implementado
-  — 3 inconsistências reais corrigidas (detalhes no commit `docs: audita...`), evitando que o
+  - 3 inconsistências reais corrigidas (detalhes no commit `docs: audita...`), evitando que o
   README citasse algo que os specs originais não batiam mais. Seção 3 ("Como executar") validada
   de verdade nesta sessão, do zero: build+run da API standalone (`curl` real colado), stack
   completa via `docker compose up` incluindo o 5º painel do dashboard (nunca confirmado
-  visualmente antes — validado ponta a ponta via Prometheus direto e proxy do Grafana, mesmo
+  visualmente antes - validado ponta a ponta via Prometheus direto e proxy do Grafana, mesmo
   número nos dois), e a DAG do Airflow. Seção 6 (Limitações e lições aprendidas) escrita
   pensando no "Result" do vídeo STAR, como pedido.
 
@@ -328,7 +328,7 @@ Status.
 ## TODO
 
 *(Demais tarefas dos EPICS 05–14 serão detalhadas ao chegar em cada STEP
-do roadmap — ver decisão de não planejar em excesso antecipadamente,
+do roadmap - ver decisão de não planejar em excesso antecipadamente,
 registrada na sessão de discovery.)*
 
 ---
@@ -341,20 +341,20 @@ registrada na sessão de discovery.)*
 
 ## BACKLOG (nível de épico, não detalhado ainda)
 
-**Próximo: EPIC 14 (vídeo STAR).** Última etapa do `docs/ROADMAP.md` — todo o resto, incluindo
+**Próximo: EPIC 14 (vídeo STAR).** Última etapa do `docs/ROADMAP.md` - todo o resto, incluindo
 `STEP 10` (arquitetura de cloud) e `STEP 11` (documentação final), está concluído.
 
-- EPIC 05 — Docker (DOCK-001 concluído; compose entregue na OBS-001)
-- EPIC 06 — Testes
-- EPIC 07 — CI/CD (GitHub Actions) (CI-001 concluído — cobre só o CI; o CD segue dependendo de
+- EPIC 05 - Docker (DOCK-001 concluído; compose entregue na OBS-001)
+- EPIC 06 - Testes
+- EPIC 07 - CI/CD (GitHub Actions) (CI-001 concluído - cobre só o CI; o CD segue dependendo de
   registry/cloud, EPIC 12)
-- EPIC 08 — Airflow (DAG de treino) (AIR-001 concluído)
-- EPIC 09 — Observabilidade (Prometheus + Grafana) (OBS-001 concluído)
-- EPIC 10 — Otimização de inferência (ONNX/quantização/pruning) (OPT-001 concluído — ONNX;
+- EPIC 08 - Airflow (DAG de treino) (AIR-001 concluído)
+- EPIC 09 - Observabilidade (Prometheus + Grafana) (OBS-001 concluído)
+- EPIC 10 - Otimização de inferência (ONNX/quantização/pruning) (OPT-001 concluído - ONNX;
   quantização/pruning fora de escopo)
-- EPIC 11 — Benchmark (latência p50/p95, tamanho de modelo) (BENCH-001 concluído — latência
+- EPIC 11 - Benchmark (latência p50/p95, tamanho de modelo) (BENCH-001 concluído - latência
   e tamanho sklearn vs. ONNX medidos)
-- EPIC 12 — Arquitetura de cloud (ADR-005) — `STEP 10`, **concluído** (ARCH-001: análise
+- EPIC 12 - Arquitetura de cloud (ADR-005) - `STEP 10`, **concluído** (ARCH-001: análise
   teórica, batch vs. real-time, AWS vs. Azure vs. GCP; deploy real não era obrigatório)
-- EPIC 13 — Documentação final (`STEP 11`) — **concluído** (DOC-002: README reestruturado)
-- EPIC 14 — Vídeo STAR
+- EPIC 13 - Documentação final (`STEP 11`) - **concluído** (DOC-002: README reestruturado)
+- EPIC 14 - Vídeo STAR
