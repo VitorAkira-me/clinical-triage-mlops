@@ -180,6 +180,28 @@ só baixa de verdade (com o `HF_TOKEN` do `.env`) como último recurso. Comando 
 inclusive um bug sutil que quase reintroduzi tentando simplificar o comando — estão em
 [docs/specs/AIR-001.md](docs/specs/AIR-001.md).
 
+**Dois scripts, dois propósitos diferentes — não confundir**: `run_airflow_dag.sh`/`.ps1` (acima)
+**provam** que a DAG funciona (`airflow dags test`, é o que uso pra validar de verdade e é o que
+o CI/desenvolvimento usariam). `run_airflow_ui.sh`/`.ps1` é só pra **demonstração visual** — sobe
+`airflow standalone` (scheduler + webserver + triggerer de pé, UI completa em
+`localhost:8080`), não é modo de produção:
+
+```bash
+./scripts/run_airflow_ui.sh       # ou .\scripts\run_airflow_ui.ps1 no PowerShell
+```
+
+A senha do usuário `admin` é gerada sozinha. Testei e confirmei que o jeito que funciona é ler o
+arquivo (o banner de senha não apareceu no log nesta sessão, mesmo com o webserver já
+respondendo) — em outro terminal, com o script ainda rodando:
+
+```bash
+docker exec air001-ui-standalone cat /opt/airflow/standalone_admin_password.txt
+```
+
+Pra disparar a DAG manualmente pela UI: acesse `localhost:8080`, entre com `admin`/a senha do
+arquivo, ative o toggle ao lado de `air001_train_baseline` (vem pausada por padrão), clique no
+nome da DAG e no botão de play (▶) pra disparar uma run — acompanha em tempo real na visão Grid.
+
 ### 3.4 CI/CD
 
 `.github/workflows/ci.yml`: `lint` (ruff) e `test` (pytest) em paralelo, `build` (builda a imagem

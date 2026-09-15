@@ -260,6 +260,14 @@ Status.
   só que existe) — validados do zero, sem modelo presente, nos dois shells. Detalhes completos
   em [docs/specs/AIR-001.md](specs/AIR-001.md), seção "Re-validação pré-vídeo".
 
+  **Scripts de demonstração visual pro vídeo** (`scripts/run_airflow_ui.sh`/`.ps1`, separados dos
+  scripts de teste acima, que continuam intocados): sobem `airflow standalone` (UI completa,
+  porta 8080) com a mesma imagem/volumes. Validado nos dois shells, ~18s pra subir,
+  `/health`/`/login/` reais respondendo 200, DAG listada. Senha do `admin` fica em
+  `/opt/airflow/standalone_admin_password.txt` dentro do container — checado rodando de
+  verdade, não assumido; o banner de senha no log (citado como possível no pedido) **não
+  apareceu** mesmo com o webserver já respondendo tráfego real.
+
 ### OPT-001 / BENCH-001 — Otimização de inferência (ONNX) + benchmark
 - **Objetivo**: aplicar uma técnica de otimização de latência (ONNX, citado como exemplo no
   enunciado oficial) e comparar com o original — corretude primeiro, latência depois
