@@ -110,146 +110,225 @@ ADR-005.
 
 ## 3. Como executar
 
-### Pré-requisito: o artefato do modelo
+### 3.1 Demonstração com os modelos versionados
 
-A API serve o baseline treinado na ML-003 (`models/tfidf_logreg_baseline.joblib`). Esse arquivo
-**não é versionado no Git** (gitignored de propósito) - gere-o rodando
-`notebooks/02_baseline.ipynb` **ou** a DAG do Airflow (seção 3.3) antes de subir a API/imagem.
-Sem ele, a API falha no startup com mensagem acionável e o `docker build` falha no `COPY` do
-modelo.
+Versionei `models/tfidf_logreg_baseline.joblib` (9.044 bytes) e
+`models/tfidf_logreg_baseline.onnx` (7.076 bytes). Para subir a demonstração, **não preciso
+baixar o dataset, configurar `HF_TOKEN`, executar notebook ou rodar Airflow**. Os dados em
+`data/raw/` e `data/processed/` continuam excluídos do Git; só os `.gitkeep` são rastreados.
+A API usa o `.joblib`; o ONNX fica disponível para a comparação de inferência.
 
-### 3.1 Build e run da API (container único)
+Validei em 14/09/2026, no Windows com PowerShell **7.6.5**, Docker Desktop **4.84.0** e
+Engine **29.6.2**. Os comandos abaixo usam PowerShell 7 e `curl.exe` (evito o alias `curl`
+do Windows PowerShell 5.1). Preciso do Docker em execução e das portas 8000, 9090 e 3000
+livres; para a UI opcional do Airflow, também da 8080.
 
-```bash
-docker build -t clinical-triage-api .
-docker run --rm -p 8000:8000 clinical-triage-api
+**Clone que executei na validação:** clonei o commit `7caf5eb` do repositório Git local
+para uma pasta nova, usando `--no-local`, sem copiar nenhum arquivo manualmente. Esse
+ensaio valida o conteúdo commitado; não valida a publicação desse commit no GitHub.
+O repositório público é [VitorAkira-me/clinical-triage-mlops](https://github.com/VitorAkira-me/clinical-triage-mlops).
+Os caminhos abaixo registram literalmente meu ensaio local.
+
+Crio o clone separado; o Git respondeu `Cloning into ...clinical-triage-validacao-20260915...`.
+
+```powershell
+git clone --no-local C:\Users\vitor\Documents\clinical-triage-mlops C:\Users\vitor\Documents\clinical-triage-validacao-20260915
 ```
 
-A imagem é autossuficiente: o modelo é embutido no build, não precisa de volume, rede externa ou
-variável de ambiente. `docker ps` mostra `healthy` alguns segundos depois de subir.
+Na pasta do clone, subo os três serviços; obtive a imagem `Built`, a API `Healthy` e
+Prometheus/Grafana `Started`.
 
-```bash
-curl http://localhost:8000/health
-# {"status":"ok"}
-
-curl -X POST http://localhost:8000/predict \
-  -H 'content-type: application/json' \
-  -d '{"clinical_notes": "67yo M c/o chest pain, diaphoretic, in moderate distress"}'
-# {"urgencia":"urgente","probabilidades":{"atencao":0.089,"normal":0.171,"urgente":0.740}}
-```
-
-Sem Docker: `uv sync && uv run uvicorn src.api.main:app --host 0.0.0.0 --port 8000`
-(`uv sync --extra data` adiciona pandas/pyarrow/huggingface-hub pros notebooks). Contrato
-completo em [docs/specs/API-001-predict-endpoint.md](docs/specs/API-001-predict-endpoint.md);
-decisões da imagem em [docs/specs/DOCK-001-dockerize-api.md](docs/specs/DOCK-001-dockerize-api.md).
-
-### 3.2 Stack completa (API + Prometheus + Grafana)
-
-```bash
+```powershell
+Set-Location C:\Users\vitor\Documents\clinical-triage-validacao-20260915
 docker compose up -d --build
 ```
 
-Sobe os três serviços na ordem certa (API primeiro, `healthy`, só então Prometheus/Grafana -
-`depends_on: condition: service_healthy`, reaproveitando o `HEALTHCHECK` da API). URLs:
-`localhost:8000` (API), `localhost:9090` (Prometheus), `localhost:3000` (Grafana,
-`admin`/`admin` - desenvolvimento local, não produtivo). Dashboard já vem provisionado por
-arquivo, sem clique na UI - painéis descritos na seção 5. Decisões em
-[docs/specs/OBS-001.md](docs/specs/OBS-001.md).
-
-### 3.3 Pipeline de treino (Airflow)
-
-DAG com 2 tasks (`load_dataset → train_baseline`), container standalone - testei e confirmei que
-**Airflow nativo não roda no Windows** (quebra já na importação básica), por isso Docker em vez
-de venv local, em qualquer sistema operacional.
-
-```bash
-# Linux, macOS, Git Bash (Windows)
-./scripts/run_airflow_dag.sh
-```
+Confiro os serviços. Na minha execução apareceram estes nomes e portas:
 
 ```powershell
-# PowerShell nativo do Windows
+docker compose ps
+```
+
+| Container | Estado observado | Porta no host |
+|---|---|---|
+| `clinical-triage-validacao-20260915-api-1` | Up (healthy) | 8000 |
+| `clinical-triage-validacao-20260915-prometheus-1` | Up | 9090 |
+| `clinical-triage-validacao-20260915-grafana-1` | Up | 3000 |
+
+O prefixo vem do nome da pasta do clone. Prometheus e Grafana não têm healthcheck Docker
+configurado; confirmei a saúde deles pelos endpoints abaixo, além do estado `Up`.
+O clone não tinha `.env`, e as pastas de dados continham somente `.gitkeep`. Confirmei
+também que a API não recebeu token; a saída foi `HF_TOKEN presente: False`.
+
+```powershell
+docker compose exec -T api python -c "import os; print('HF_TOKEN presente:', 'HF_TOKEN' in os.environ)"
+```
+
+### 3.2 Testar a API
+
+Consulto a saúde da API; recebi `{"status":"ok"}`.
+
+```powershell
+curl.exe -fsS http://localhost:8000/health
+```
+
+Envio uma nota de exemplo; recebi a classificação e probabilidades reproduzidas abaixo.
+
+```powershell
+curl.exe -fsS http://localhost:8000/predict -H 'Content-Type: application/json' -d '{"clinical_notes":"67yo M c/o chest pain, diaphoretic, in moderate distress"}'
+```
+
+```json
+{"urgencia":"urgente","probabilidades":{"atencao":0.08943879110048149,"normal":0.17065262240079587,"urgente":0.7399085864987226}}
+```
+
+### 3.3 Confirmar a coleta do Prometheus
+
+Consulto a prontidão; recebi `Prometheus Server is Ready.`.
+
+```powershell
+curl.exe -fsS http://localhost:9090/-/ready
+```
+
+Confiro o target e o último erro; recebi `health: up`, com `lastError` vazio.
+
+```powershell
+(curl.exe -fsS http://localhost:9090/api/v1/targets | ConvertFrom-Json).data.activeTargets | Select-Object scrapeUrl,health,lastError | ConvertTo-Json
+```
+
+```json
+{
+  "scrapeUrl": "http://api:8000/metrics",
+  "health": "up",
+  "lastError": ""
+}
+```
+
+A UI fica em [localhost:9090/targets](http://localhost:9090/targets).
+`api:8000` é o endereço interno do serviço na rede do Compose.
+
+### 3.4 Acessar o Grafana e o dashboard provisionado
+
+Consulto a saúde; recebi `database: ok`, versão `11.4.0`.
+
+```powershell
+curl.exe -fsS http://localhost:3000/api/health
+```
+
+Confirmo o dashboard com a credencial local `admin` / `admin`; obtive `provisioned: true`,
+pasta `General`, título `Clinical Triage - Observabilidade (OBS-001)` e 5 painéis.
+
+```powershell
+$dashboard = curl.exe -fsS -u admin:admin http://localhost:3000/api/dashboards/uid/obs-001-clinical-triage | ConvertFrom-Json
+$dashboard.meta | Select-Object provisioned,url,folderTitle | ConvertTo-Json
+$dashboard.dashboard | Select-Object title,@{n='panels';e={$_.panels.Count}} | ConvertTo-Json
+```
+
+Abro [Grafana na porta 3000](http://localhost:3000), entro com `admin` / `admin` e acesso
+[o dashboard provisionado](http://localhost:3000/d/obs-001-clinical-triage/clinical-triage-observabilidade-obs-001).
+Confirmei esse caminho pela API do Grafana. As chamadas ao `/predict` geram métricas;
+para os gráficos de taxa, preciso manter tráfego ao longo de mais de uma coleta.
+
+### 3.5 Airflow: testar a DAG de retreino (opcional)
+
+**Rodar a DAG só é necessário para quem quiser retreinar.** A demonstração acima já
+funcionou antes desta etapa. O script executa `airflow dags test`, termina e remove seu
+container; ele **não sobe uma UI**. O teste efetivamente regrava o `.joblib`.
+
+Executei esta etapa no workspace original, que já tinha
+`data/raw/fedmml_ed_triage_raw.parquet`. Confirmei no log que ele foi reutilizado, sem
+novo download. Em um ambiente sem dados nem cache, a DAG precisa de acesso ao dataset
+gated e de `HF_TOKEN` no `.env`; não testei esse caminho de download nesta sessão.
+
+Na raiz do workspace, executo o script existente; as tasks `load_dataset` e
+`train_baseline` ficaram `SUCCESS`, a DagRun ficou `state=success` e o script terminou
+com `Tudo certo.` e exit code 0.
+
+```powershell
+Set-Location C:\Users\vitor\Documents\clinical-triage-mlops
 .\scripts\run_airflow_dag.ps1
 ```
 
-Os dois resolvem a raiz do repositório sozinhos (rodam de qualquer diretório) e confirmam que o
-`.joblib` foi **atualizado** pela execução, não só que ele existe. `load_dataset` reusa
-`data/raw/fedmml_ed_triage_raw.parquet` se já existir; senão tenta o cache local do Hugging Face;
-só baixa de verdade (com o `HF_TOKEN` do `.env`) como último recurso. Comando manual equivalente
-(bash e PowerShell) e o troubleshooting real por trás desses dois scripts -
-inclusive um bug sutil que quase reintroduzi tentando simplificar o comando - estão em
-[docs/specs/AIR-001.md](docs/specs/AIR-001.md).
+O script usou a data `2026-09-14` e confirmou o modelo atualizado com 9.044 bytes às
+21:42:55. A data é calculada pelo próprio script. A checagem de atualização evita aceitar
+uma DagRun que reporte sucesso sem executar as tasks.
 
-**Dois scripts, dois propósitos diferentes - não confundir**: `run_airflow_dag.sh`/`.ps1` (acima)
-**provam** que a DAG funciona (`airflow dags test`, é o que uso pra validar de verdade e é o que
-o CI/desenvolvimento usariam). `run_airflow_ui.sh`/`.ps1` é só pra **demonstração visual** - sobe
-`airflow standalone` (scheduler + webserver + triggerer de pé, UI completa em
-`localhost:8080`), não é modo de produção:
+### 3.6 Airflow: subir a UI para visualização (opcional)
 
-```bash
-./scripts/run_airflow_ui.sh       # ou .\scripts\run_airflow_ui.ps1 no PowerShell
+Executo o script separado e mantenho esse terminal aberto; ele anunciou
+`Subindo Airflow standalone em http://localhost:8080`. É modo de demonstração.
+
+```powershell
+.\scripts\run_airflow_ui.ps1
 ```
 
-A senha do usuário `admin` é gerada sozinha. Testei e confirmei que o jeito que funciona é ler o
-arquivo (o banner de senha não apareceu no log nesta sessão, mesmo com o webserver já
-respondendo) - em outro terminal, com o script ainda rodando:
+Em outro terminal, verifico saúde e login. Recebi `healthy` para `metadatabase`,
+`scheduler` e `triggerer`, e HTTP `200` para o login. O campo `dag_processor` veio com
+status `null` nessa configuração standalone.
 
-```bash
+```powershell
+curl.exe -fsS http://localhost:8080/health
+curl.exe -s -o NUL -w '%{http_code}' http://localhost:8080/login/
+```
+
+Leio a senha gerada do usuário `admin`; confirmei que este arquivo existe dentro do
+container `air001-ui-standalone`. A senha muda entre containers, por isso leio a atual.
+
+```powershell
 docker exec air001-ui-standalone cat /opt/airflow/standalone_admin_password.txt
 ```
 
-Pra disparar a DAG manualmente pela UI: acesse `localhost:8080`, entre com `admin`/a senha do
-arquivo, ative o toggle ao lado de `air001_train_baseline` (vem pausada por padrão), clique no
-nome da DAG e no botão de play (▶) pra disparar uma run - acompanha em tempo real na visão Grid.
+Confiro a DAG; apareceu `air001_train_baseline`, owner `airflow`, `is_paused: True`.
 
-### 3.4 CI/CD
-
-`.github/workflows/ci.yml`: `lint` (ruff) e `test` (pytest) em paralelo, `build` (builda a imagem
-e valida `/health`+`/predict` reais dentro dela) só depois dos dois passarem. Roda em todo PR e
-push pra `main`; testei de propósito quebrando um lint e confirmando que o GitHub recusa o merge
-com branch protection ativa, não só reporta vermelho. Decisões em
-[docs/specs/CI-001-ci-pipeline.md](docs/specs/CI-001-ci-pipeline.md).
-
-### 3.5 Como testar cada etapa
-
-Comandos reais que rodei pra confirmar cada peça isoladamente, não só "subir tudo e torcer":
-
-**A API está respondendo?**
-```bash
-curl -s http://localhost:8000/health
-# {"status":"ok"}
-curl -s -X POST http://localhost:8000/predict -H 'content-type: application/json' \
-  -d '{"clinical_notes": "67yo M c/o chest pain"}'
-# {"urgencia":"urgente","probabilidades":{...}}
+```powershell
+docker exec air001-ui-standalone airflow dags list
 ```
 
-**O Prometheus está coletando a API?**
-```bash
-curl -s http://localhost:9090/api/v1/targets | grep -o '"health":"[a-z]*"'
-# "health":"up"
-```
-Se vier `"down"`, o alvo `api:8000` não é um erro de configuração - é o nome do serviço no
-`docker-compose.yml`, resolvido pelo DNS interno do Compose (não `localhost`, que de dentro do
-container do Prometheus apontaria pra ele mesmo). `down` normalmente significa que a API ainda
-não terminou de subir - espere o `docker ps` mostrar `healthy` e tente de novo.
+Abro [Airflow na porta 8080](http://localhost:8080), entro com `admin` e a senha do
+arquivo. A DAG já está disponível para visualização. Se quiser retreinar pela UI, ativo
+a DAG e disparo uma execução pelo botão de play; isso também sobrescreve o modelo.
 
-**O dashboard está populado?**
-```bash
-curl -s -u admin:admin http://localhost:3000/api/dashboards/uid/obs-001-clinical-triage \
-  | python -c "import json,sys; d=json.load(sys.stdin); print(d['meta']['provisioned'], len(d['dashboard']['panels']))"
-# True 5
-```
-Confirma que os 5 painéis foram provisionados por arquivo. Pra ver dado de verdade nos gráficos,
-gere tráfego primeiro (os `curl` da seção "API está respondendo" já bastam) e abra
-`localhost:3000` - o dashboard atualiza sozinho a cada 10s.
+### 3.7 Executar o benchmark ONNX vs. sklearn (opcional)
 
-**A DAG do Airflow rodou com sucesso?**
-Os scripts da seção 3.3 já fazem essa confirmação sozinhos (checam que `models/tfidf_logreg_
-baseline.joblib` foi atualizado pela execução, não só que a DAG "reportou sucesso" - motivo
-completo em `docs/specs/AIR-001.md`). Rodar de novo é a própria checagem:
-```bash
-./scripts/run_airflow_dag.sh   # termina com "Tudo certo." e exit code 0, ou explica o que falhou
+O script real é `benchmarks/opt001_onnx_benchmark.py`. Ele lê o `.joblib` e o parquet
+local, converte o pipeline para ONNX, verifica corretude e mede latência. **O benchmark
+precisa do dataset local**, mesmo com os pesos versionados; não é pré-requisito da API.
+
+No workspace original, instalo os extras do lockfile. Minha primeira tentativa direta
+falhou com `ModuleNotFoundError: No module named 'onnxruntime'`; este comando instalou
+os extras, incluindo `onnxruntime==1.23.2` e `skl2onnx==1.20.0`, sem alterar o lockfile.
+
+```powershell
+uv sync --frozen --extra benchmark --extra data
 ```
+
+Executo o benchmark com os mesmos extras ativos; terminou com exit code 0 e
+`Resultados salvos em docs\experiments\OPT-001-benchmark.json`.
+
+```powershell
+uv run --frozen --extra benchmark --extra data python benchmarks/opt001_onnx_benchmark.py
+```
+
+Na execução final desta sessão, sobre o `.joblib` original do commit `7caf5eb`, obtive:
+
+| Medida | sklearn | ONNX |
+|---|---:|---:|
+| Mediana (300 iterações) | 0,4046 ms | 0,0358 ms |
+| p95 | 0,4779 ms | 0,0473 ms |
+
+Corretude: **150/150 classes iguais**, diferença máxima de probabilidade `8,11e-08`.
+Speedup: **11,30x na mediana** e **10,10x no p95**. Mantive o
+[JSON gerado pelo script](docs/experiments/OPT-001-benchmark.json), sem edição manual.
+
+O script regrava o `.onnx` e o JSON. Após validar os scripts, restaurei os dois modelos
+originais versionados na Tarefa 1; assim, a entrega preserva exatamente os artefatos
+que usei no clone limpo. Os tempos acima medem inferência isolada e variam por execução.
+
+### 3.8 CI/CD
+
+`.github/workflows/ci.yml` executa lint, testes e build. As decisões existentes estão em
+[CI-001](docs/specs/CI-001-ci-pipeline.md). Nesta alteração validei os comandos de
+execução acima; não alterei aplicação, testes nem configuração de CI.
 
 ## 4. Resultados
 
@@ -308,8 +387,8 @@ Latência (300 iterações, mesma entrada, mesma máquina, depois de warmup):
 
 | | sklearn original | ONNX (onnxruntime) | Speedup |
 |---|---|---|---|
-| Mediana | 0.40 ms | 0.036 ms | **~11x** |
-| p95 | 0.55 ms | 0.050 ms | **~11x** |
+| Mediana | 0.4046 ms | 0.0358 ms | **11,30x** |
+| p95 | 0.4779 ms | 0.0473 ms | **10,10x** |
 
 Tamanho do artefato: 9.044 bytes (`.joblib`) contra 7.076 bytes (`.onnx`), -22%.
 
@@ -324,7 +403,7 @@ conversão em [docs/specs/OPT-001.md](docs/specs/OPT-001.md) e
 
 ## 5. Monitoramento
 
-Prometheus + Grafana sobem junto com a API via `docker-compose up` (seção 3.2), dashboard
+Prometheus + Grafana sobem junto com a API via `docker compose up -d --build` (seção 3.1), dashboard
 provisionado por arquivo. Os 5 painéis, todos validados com dado real - não só a métrica
 existindo, o número batendo com o tráfego que gerei:
 
@@ -407,7 +486,7 @@ clinical-triage-mlops/
 ├── scripts/                    # run_airflow_dag.sh/.ps1 - AIR-001
 ├── src/api/                    # FastAPI - API-001
 ├── tests/
-├── models/                     # .joblib/.onnx (gitignored, gerado localmente)
+├── models/                     # .joblib/.onnx treinados e versionados
 ├── .claude/CLAUDE.md
 ├── Dockerfile                  # DOCK-001
 ├── docker-compose.yml          # OBS-001

@@ -12,13 +12,15 @@ build/
 .coverage
 htmlcov/
 
-# dados e modelos (versionados via DVC/artefatos, não Git, quando aplicável)
+# Dados ficam fora do Git; versiono apenas os dois modelos treinados da demonstração.
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
 models/*
 !models/.gitkeep
+!models/tfidf_logreg_baseline.joblib
+!models/tfidf_logreg_baseline.onnx
 
 .DS_Store
 .idea/
