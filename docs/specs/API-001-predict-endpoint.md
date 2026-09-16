@@ -174,7 +174,7 @@ métricas já foram medidas e documentadas na ML-003
   vale deixar registrado que "clonar e rodar" não funciona sem esse passo manual - Docker/deploy
   (fora de escopo aqui) vai precisar decidir como o artefato chega à imagem
 - Ordem de `pipeline.classes_` divergente da ordem usada nos notebooks é uma fonte plausível de
-  bug silencioso (probabilidades trocadas entre classes sem erro nenhum) - mitigado pela regra
+  bug silencioso (probabilidades trocadas entre classes sem erro nenhum) - mitigada pela regra
   explícita na seção "Interface esperada", mas vale um teste específico que não deixe essa
   ambiguidade passar (checar que a probabilidade mais alta bate com a classe retornada em
   `urgencia`)
