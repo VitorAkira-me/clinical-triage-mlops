@@ -15,7 +15,7 @@ ainda - CI-001 valida o build da imagem, mas não faz push. Não há lock-in de 
 
 **Real-time - não é uma escolha nova, é uma constatação do que já foi construído.** A API-001 já
 definiu o contrato como síncrono: cliente manda `clinical_notes`, espera a resposta na mesma
-requisição, com latência importando (medida em toda a stack: RED metrics no Passo 1 da OBS-001,
+requisição - e a latência importa (medida em toda a stack: RED metrics no Passo 1 da OBS-001,
 buckets calibrados pra sub-10ms; benchmark ONNX no OPT-001 comparando latência de inferência pura).
 Isso é inerente ao próprio problema: **triagem** significa priorizar atendimento no momento em que
 o laudo chega - processar em lote à noite anularia o propósito do sistema (o paciente já teria

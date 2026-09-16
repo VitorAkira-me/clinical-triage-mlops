@@ -316,7 +316,7 @@ Status.
 - **Resultado**: `README.md` reestruturado (11 seções). Antes de escrever, auditoria dedicada de
   `docs/specs/*.md`/`docs/decisions/*.md`/KANBAN/CLAUDE.md contra o que foi de fato implementado
   - 3 inconsistências reais corrigidas (detalhes no commit `docs: audita...`), evitando que o
-  README citasse algo que os specs originais não batiam mais. Seção 3 ("Como executar") validada
+  README citasse algo que já não batia mais com os specs originais. Seção 3 ("Como executar") validada
   de verdade nesta sessão, do zero: build+run da API standalone (`curl` real colado), stack
   completa via `docker compose up` incluindo o 5º painel do dashboard (nunca confirmado
   visualmente antes - validado ponta a ponta via Prometheus direto e proxy do Grafana, mesmo

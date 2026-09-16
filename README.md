@@ -90,7 +90,7 @@ requisição - e a latência importa o suficiente pra eu ter calibrado buckets d
 milissegundos (OBS-001) e medido a inferência isolada no benchmark ONNX (OPT-001). Processar em
 lote mataria o próprio sentido de "triagem": o paciente já teria sido atendido, bem ou mal, antes
 do lote rodar de madrugada. O treino é o oposto - já é batch por natureza (a DAG do Airflow roda
-sob demanda, não fica ligada o tempo todo). Não planejei essa distinção de propósito, ela só
+sob demanda, não fica ligada o tempo todo). Não planejei essa distinção de propósito; ela só
 apareceu porque treino e inferência têm perfis de uso completamente diferentes.
 
 **Provedor: recomendo AWS.** Não tenho compromisso com nenhum provedor hoje - é tudo Docker puro,
@@ -341,7 +341,7 @@ Baseline: TF-IDF + Logistic Regression (`class_weight="balanced"`), treinado sob
 
 #### 4.1.1 Limitações do dataset - vazamento de rótulo
 
-Durante a EDA (ML-002) e confirmado empiricamente na ML-003, achei que o campo `clinical_notes`
+Achei na EDA (ML-002) e confirmei empiricamente na ML-003 que o campo `clinical_notes`
 do `fedmml-ed-triage` é gerado por um template fixo: as 28 categorias de `chief_complaint` e as 5
 variantes de cláusula final do texto mapeiam pra classe de urgência com 100% de precisão, sem
 exceção, nas 85.679 notas verificadas.
@@ -403,9 +403,9 @@ conversão em [docs/specs/OPT-001.md](docs/specs/OPT-001.md) e
 
 ## 5. Monitoramento
 
-Prometheus + Grafana sobem junto com a API via `docker compose up -d --build` (seção 3.1), dashboard
-provisionado por arquivo. Os 5 painéis, todos validados com dado real - não só a métrica
-existindo, o número batendo com o tráfego que gerei:
+Prometheus + Grafana sobem junto com a API via `docker compose up -d --build` (seção 3.1), com o
+dashboard provisionado por arquivo. Os 5 painéis, todos validados com dados reais - não só porque a
+métrica existe, mas porque o número bate com o tráfego que gerei:
 
 1. **Taxa de requisições** (por rota), a partir de `http_requests_total` (RED, OBS-001 Passo 1).
 2. **Latência p95** (por rota), `histogram_quantile` sobre `http_request_duration_seconds_bucket`
@@ -421,7 +421,7 @@ existindo, o número batendo com o tráfego que gerei:
    estado normal enquanto não houver erro real na janela do painel - confirmei gerando um erro de
    propósito e vendo o painel reagir na hora, não é bug nem configuração errada.
 
-Os painéis 3 e 4 não são detecção estatística formal de drift - são gatilho pra eu (ou quem
+Os painéis 3 e 4 não são detecção estatística formal de drift - são gatilhos pra eu (ou quem
 estiver de plantão) ir investigar, não um alarme automático. Decisões completas em
 [docs/specs/OBS-001.md](docs/specs/OBS-001.md).
 
@@ -453,7 +453,7 @@ escrito por outra versão (`OSError: Repetition level histogram size mismatch`).
 exata nos dois lados deixou de ser opcional antes de eu converter pra ONNX.
 
 O Airflow nativo não roda no Windows - não assumi isso, testei: o próprio `import airflow`
-imprime um aviso da lib avisando, e uma importação básica (`DagBag`) já quebra. Rodar em Docker
+imprime um aviso da própria lib, e uma importação básica (`DagBag`) já quebra. Rodar em Docker
 desde o início evitou eu ter que voltar atrás nessa decisão depois.
 
 E a lição mais recente, literalmente da véspera do vídeo: documentação errada quebra ambiente de
