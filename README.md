@@ -25,7 +25,7 @@ desenvolvido pra o Tech Challenge - Fase 3 da Pós Tech em Machine Learning Engi
 |---|---|---|
 | Vitor Akira Ucha Ito | RM371483 | [Github](https://github.com/VitorAkira-me) - [Linkedin](https://www.linkedin.com/in/vitor-akira/) |
 
-🎥 Vídeo Explicativo em até 5 min: [ADICIONAR LINK]
+🎥 Vídeo Explicativo em até 5 min: [assista no YouTube](https://youtu.be/1ogej_EVf1o)
 
 ## Fluxo do projeto
 
