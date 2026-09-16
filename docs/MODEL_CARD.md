@@ -20,8 +20,8 @@ mais moldou as decisões do projeto a partir da EDA.
 
   | | sklearn original | ONNX (onnxruntime) | Speedup |
   |---|---|---|---|
-  | Mediana | 0,40 ms | 0,036 ms | ~11x |
-  | p95 | 0,55 ms | 0,050 ms | ~11x |
+  | Mediana | 0,40 ms | 0,036 ms | ~11,30x |
+  | p95 | 0,48 ms | 0,047 ms | ~10,10x |
 
   Corretude validada **antes** de reportar essa velocidade: 150 textos reais do dataset, 100% das
   classes batendo entre sklearn e ONNX, diferença máxima de probabilidade de `8,11e-08`

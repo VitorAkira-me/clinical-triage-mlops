@@ -46,6 +46,11 @@ paciente:
 - `atencao` → revisão em prazo intermediário
 - `normal` → revisão em prazo padrão
 
+Esse mapeamento é conceitual, não uma fila implementada no código: a API (`POST /predict`) só
+devolve `urgencia` + `probabilidades` (ver [docs/specs/API-001-predict-endpoint.md](specs/API-001-predict-endpoint.md));
+não existe hoje nenhum sistema de fila ou priorização automática no projeto. Descreve como a
+predição *deveria* ser consumida por quem opera a triagem, não o que o sistema já faz sozinho.
+
 O modelo não aciona nenhum fluxo assistencial sozinho (não solicita exame, não define protocolo,
 não bloqueia atendimento). Essa fronteira é deliberada: dado o achado do vazamento determinístico
 de rótulo ([ADR-002](decisions/ADR-002-text-leakage.md)), automatizar qualquer decisão clínica a
